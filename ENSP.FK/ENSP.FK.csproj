@@ -11,6 +11,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="TestParse\**" />
+    <None Remove="TestParse\**" />
+    <EmbeddedResource Remove="TestParse\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Include="wpfui-icon.ico" />
   </ItemGroup>
 

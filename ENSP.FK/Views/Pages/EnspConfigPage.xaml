@@ -1,0 +1,64 @@
+<Page
+  x:Class="ENSP.FK.Views.Pages.EnspConfigPage"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:local="clr-namespace:ENSP.FK.Views.Pages"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  Title="ENSP RUN"
+  d:DataContext="{d:DesignInstance local:EnspConfigPage, IsDesignTimeCreatable=False}"
+  d:DesignHeight="450"
+  d:DesignWidth="800"
+  ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
+  ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+  Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+  mc:Ignorable="d"
+>
+  <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+    <StackPanel>
+      <ui:SymbolIcon
+        Width="64"
+        Height="64"
+        Symbol="PlayCircle24"
+        Foreground="{DynamicResource AccentFillColorDefaultBrush}"
+        HorizontalAlignment="Center"
+      />
+
+      <TextBlock
+        Margin="0,20,0,0"
+        FontSize="20"
+        FontWeight="SemiBold"
+        HorizontalAlignment="Center"
+        Text="ENSP RUN"
+      />
+
+      <TextBlock
+        Margin="0,8,0,0"
+        FontSize="13"
+        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+        HorizontalAlignment="Center"
+        Text="使用当前导入的拓扑文件启动 eNSP 模拟器"
+      />
+
+      <ui:Button
+        Margin="0,24,0,0"
+        Width="200"
+        HorizontalAlignment="Center"
+        Appearance="Primary"
+        Command="{Binding ViewModel.LaunchEnspCommand, Mode=OneWay}"
+        Content="开启 ENSP"
+        Icon="Play24"
+        IsEnabled="{Binding ViewModel.TopoLoaded, Mode=OneWay}"
+      />
+
+      <TextBlock
+        Margin="0,16,0,0"
+        FontSize="12"
+        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+        HorizontalAlignment="Center"
+        Text="{Binding ViewModel.Status, Mode=OneWay}"
+      />
+    </StackPanel>
+  </Grid>
+</Page>
