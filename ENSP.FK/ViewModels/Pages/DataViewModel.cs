@@ -6,22 +6,18 @@ namespace ENSP.FK.ViewModels.Pages
 {
     public partial class DataViewModel : ObservableObject, INavigationAware
     {
-        private bool _isInitialized = false;
-
         [ObservableProperty]
         private IEnumerable<DataColor> _colors;
 
         public Task OnNavigatedToAsync()
         {
-            if (!_isInitialized)
-                InitializeViewModel();
-
+            RefreshData();
             return Task.CompletedTask;
         }
 
         public Task OnNavigatedFromAsync() => Task.CompletedTask;
 
-        private void InitializeViewModel()
+        private void RefreshData()
         {
             var random = new Random();
             var colorCollection = new List<DataColor>();
@@ -42,8 +38,6 @@ namespace ENSP.FK.ViewModels.Pages
                 );
 
             Colors = colorCollection;
-
-            _isInitialized = true;
         }
     }
 }
