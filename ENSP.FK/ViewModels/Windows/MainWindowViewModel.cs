@@ -1,30 +1,40 @@
-using ENSP.FK.Services;
+using ENSP.ZD.Services;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using Wpf.Ui.Controls;
 
-namespace ENSP.FK.ViewModels.Windows;
+namespace ENSP.ZD.ViewModels.Windows;
 
 public partial class MainWindowViewModel : ObservableObject
 {
     [ObservableProperty]
-    private string _applicationTitle = "ENSP.FK — eNSP 自动配置工具";
+    private string _applicationTitle = "ENSP.ZD — eNSP 自动配置工具";
 
     public MainWindowViewModel(ProjectSession session)
     {
+        var sw = Stopwatch.StartNew();
         session.TopologyChanged += () =>
         {
             var file = session.TopologyFilePath;
             if (!string.IsNullOrEmpty(file))
-                ApplicationTitle = $"ENSP.FK — {Path.GetFileNameWithoutExtension(file)} — eNSP 自动配置工具";
+                ApplicationTitle = $"ENSP.ZD — {Path.GetFileNameWithoutExtension(file)} — eNSP 自动配置工具";
             else
-                ApplicationTitle = "ENSP.FK — eNSP 自动配置工具";
+                ApplicationTitle = "ENSP.ZD — eNSP 自动配置工具";
         };
+        sw.Stop();
+        Debug.WriteLine($"[STARTUP] MainWindowViewModel.ctor: {sw.ElapsedMilliseconds}ms");
     }
 
     [ObservableProperty]
     private ObservableCollection<object> _menuItems = new()
     {
+        new NavigationViewItem()
+        {
+            Content = "工作台",
+            Icon = new SymbolIcon { Symbol = SymbolRegular.Toolbox24 },
+            TargetPageType = typeof(Views.Pages.WorkbenchPage)
+        },
         new NavigationViewItem()
         {
             Content = "首页",
@@ -60,6 +70,12 @@ public partial class MainWindowViewModel : ObservableObject
             Content = "ENSP 扫描",
             Icon = new SymbolIcon { Symbol = SymbolRegular.Globe24 },
             TargetPageType = typeof(Views.Pages.EnspScanPage)
+        },
+        new NavigationViewItem()
+        {
+            Content = "拓扑结构",
+            Icon = new SymbolIcon { Symbol = SymbolRegular.Flowchart24 },
+            TargetPageType = typeof(Views.Pages.TopologyGraphPage)
         }
     };
 

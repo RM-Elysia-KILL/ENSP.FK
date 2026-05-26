@@ -1,34 +1,28 @@
-﻿using ENSP.FK.Services;
-using ENSP.FK.ViewModels.Pages;
-using ENSP.FK.ViewModels.Windows;
-using ENSP.FK.Views.Pages;
-using ENSP.FK.Views.Windows;
-using Microsoft.Extensions.Configuration;
+﻿using ENSP.ZD.Services;
+using ENSP.ZD.ViewModels.Pages;
+using ENSP.ZD.ViewModels.Windows;
+using ENSP.ZD.Views.Pages;
+using ENSP.ZD.Views.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.Diagnostics;
-using System.IO;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Threading;
 using Wpf.Ui;
 using Wpf.Ui.DependencyInjection;
 
-namespace ENSP.FK
+namespace ENSP.ZD
 {
     /// <summary>
     /// Interaction logic for App.xaml
     /// </summary>
     public partial class App
     {
-        // The.NET Generic Host provides dependency injection, configuration, logging, and other services.
-        // https://docs.microsoft.com/dotnet/core/extensions/generic-host
-        // https://docs.microsoft.com/dotnet/core/extensions/dependency-injection
-        // https://docs.microsoft.com/dotnet/core/extensions/configuration
-        // https://docs.microsoft.com/dotnet/core/extensions/logging
-        private static readonly IHost _host = Host
-            .CreateDefaultBuilder()
-            .ConfigureAppConfiguration(c => { c.SetBasePath(Path.GetDirectoryName(AppContext.BaseDirectory)); })
+        // Bare HostBuilder — CreateDefaultBuilder pulls in 20+ unused assemblies
+        // (Console/Debug/EventLog/EventSource loggers, JSON/XML/env/CLI config sources,
+        // user secrets, file globbing) that add ~3.5s to debug startup.
+        private static readonly IHost _host = new HostBuilder()
             .ConfigureServices((context, services) =>
             {
                 services.AddNavigationViewPageProvider();
@@ -55,12 +49,36 @@ namespace ENSP.FK
                 services.AddSingleton<Models.ApiConfig>();
 
                 // ENSP Services
+                services.AddSingleton<DeviceIconService>(sp =>
+                {
+                    var config = sp.GetRequiredService<Models.ApiConfig>();
+                    return new DeviceIconService(config.EnspPath);
+                });
                 services.AddSingleton<TopologyParser>();
                 services.AddSingleton<ConfigurationGenerator>();
                 services.AddSingleton<AIConfigGenerator>();
                 services.AddSingleton<ConfigExporter>();
                 services.AddSingleton<SystemDiagnosticsService>();
                 services.AddSingleton<VBoxDeviceService>();
+                services.AddSingleton<LogService>();
+                services.AddSingleton<ImageRecognitionService>();
+                services.AddSingleton<EnspGuiAutomationService>();
+                services.AddSingleton<DeviceStartupService>(sp =>
+                {
+                    var guiAuto = sp.GetRequiredService<EnspGuiAutomationService>();
+                    return new DeviceStartupService(guiAuto);
+                });
+
+                // Device connection management (state machine)
+                services.AddSingleton<DeviceConnectionManager>();
+
+                // Device config popup
+                services.AddTransient<DeviceConfigWindowViewModel>();
+                services.AddTransient<DeviceConfigWindow>();
+
+                // Changelog popup
+                services.AddTransient<ChangelogWindowViewModel>();
+                services.AddTransient<ChangelogWindow>();
 
                 // Pages & ViewModels
                 services.AddSingleton<TopologyImportPage>();
@@ -73,6 +91,12 @@ namespace ENSP.FK
                 services.AddSingleton<EnspConfigViewModel>();
                 services.AddSingleton<EnspScanPage>();
                 services.AddSingleton<EnspScanViewModel>();
+                services.AddSingleton<TopologyGraphPage>();
+                services.AddSingleton<TopologyGraphViewModel>();
+
+                // Workbench (consolidated single-page workflow)
+                services.AddSingleton<WorkbenchPage>();
+                services.AddSingleton<WorkbenchViewModel>();
 
                 // Legacy pages
                 services.AddSingleton<DashboardPage>();
@@ -82,7 +106,14 @@ namespace ENSP.FK
                 services.AddSingleton<DiagnosticsPage>();
                 services.AddSingleton<DiagnosticsViewModel>();
                 services.AddSingleton<SettingsPage>();
-                services.AddSingleton<SettingsViewModel>();
+                services.AddSingleton<SettingsViewModel>(sp =>
+                {
+                    var config = sp.GetRequiredService<Models.ApiConfig>();
+                    var ai = sp.GetRequiredService<AIConfigGenerator>();
+                    var img = sp.GetRequiredService<ImageRecognitionService>();
+                    var icons = sp.GetRequiredService<DeviceIconService>();
+                    return new SettingsViewModel(config, ai, img, icons);
+                });
             }).Build();
 
         /// <summary>
@@ -98,7 +129,38 @@ namespace ENSP.FK
         /// </summary>
         private async void OnStartup(object sender, StartupEventArgs e)
         {
+            var sw = Stopwatch.StartNew();
             await _host.StartAsync();
+            sw.Stop();
+            Debug.WriteLine($"[STARTUP] Host.StartAsync → window visible: {sw.ElapsedMilliseconds}ms");
+
+            // Show changelog on first launch after update
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(1000);
+                await Dispatcher.InvokeAsync(ShowChangelogIfNewVersion);
+            });
+        }
+
+        private static void ShowChangelogIfNewVersion()
+        {
+            try
+            {
+                var apiConfig = Services.GetRequiredService<Models.ApiConfig>();
+                var currentVersion = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "0.0.0";
+                if (apiConfig.LastSeenVersion == currentVersion) return;
+
+                var window = Services.GetRequiredService<Views.Windows.ChangelogWindow>();
+                window.Owner = System.Windows.Application.Current.MainWindow;
+                window.ShowDialog();
+
+                apiConfig.LastSeenVersion = currentVersion;
+                apiConfig.Save();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[Changelog] Failed to show: {ex.Message}");
+            }
         }
 
         /// <summary>

@@ -1,8 +1,10 @@
-namespace ENSP.FK.Models.Topology;
+namespace ENSP.ZD.Models.Topology;
 
 public enum DeviceType
 {
     Router,
     Switch,
-    Firewall
+    Firewall,
+    PC,
+    Server
 }

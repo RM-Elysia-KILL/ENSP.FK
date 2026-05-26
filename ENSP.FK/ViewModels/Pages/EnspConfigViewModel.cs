@@ -1,12 +1,12 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using ENSP.FK.Models;
-using ENSP.FK.Services;
+using ENSP.ZD.Models;
+using ENSP.ZD.Services;
 using System.Diagnostics;
 using System.IO;
 using Wpf.Ui.Abstractions.Controls;
 
-namespace ENSP.FK.ViewModels.Pages;
+namespace ENSP.ZD.ViewModels.Pages;
 
 public partial class EnspConfigViewModel : ObservableObject, INavigationAware
 {

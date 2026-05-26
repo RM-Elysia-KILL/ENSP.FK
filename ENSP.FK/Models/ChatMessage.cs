@@ -1,4 +1,4 @@
-namespace ENSP.FK.Models;
+namespace ENSP.ZD.Models;
 
 public class ChatMessage
 {

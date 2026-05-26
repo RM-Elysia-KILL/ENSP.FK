@@ -1,4 +1,4 @@
-namespace ENSP.FK.Models.Requirements;
+namespace ENSP.ZD.Models.Requirements;
 
 public abstract class TaskRequirement
 {

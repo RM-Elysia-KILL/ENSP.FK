@@ -1,8 +1,8 @@
-﻿using ENSP.FK.Models;
+﻿using ENSP.ZD.Models;
 using System.Windows.Media;
 using Wpf.Ui.Abstractions.Controls;
 
-namespace ENSP.FK.ViewModels.Pages
+namespace ENSP.ZD.ViewModels.Pages
 {
     public partial class DataViewModel : ObservableObject, INavigationAware
     {

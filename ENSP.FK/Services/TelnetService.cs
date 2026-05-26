@@ -1,8 +1,9 @@
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.RegularExpressions;
 
-namespace ENSP.FK.Services;
+namespace ENSP.ZD.Services;
 
 /// <summary>
 /// Lightweight async Telnet client for connecting to eNSP devices.
@@ -60,6 +61,58 @@ public class TelnetService : IDisposable
         _readCts = null;
 
         ConnectionChanged?.Invoke(false);
+    }
+
+    /// <summary>
+    /// Send \r\n a few times to wake a freshly-booted device.
+    /// </summary>
+    public async Task WakeAsync(CancellationToken ct = default)
+    {
+        var stream = _stream;
+        if (stream == null || !IsConnected) return;
+
+        byte[] enter = Encoding.ASCII.GetBytes("\r\n");
+        for (int i = 0; i < 3; i++)
+        {
+            ct.ThrowIfCancellationRequested();
+            try
+            {
+                await stream.WriteAsync(enter, 0, enter.Length, ct);
+            }
+            catch { return; }
+            await Task.Delay(200, ct);
+        }
+    }
+
+    /// <summary>
+    /// Wait until the device CLI emits a prompt (<...> or [...]).
+    /// Returns true if prompt detected within timeoutSeconds.
+    /// </summary>
+    public async Task<bool> WaitForPromptAsync(int timeoutSeconds = 30, CancellationToken ct = default)
+    {
+        var tcs = new TaskCompletionSource<bool>();
+        var sb = new StringBuilder();
+        var promptPattern = new Regex(@"<[^>]+>|\[[^\]]+\]", RegexOptions.Compiled);
+
+        void OnData(string data)
+        {
+            sb.Append(data);
+            if (promptPattern.IsMatch(sb.ToString()))
+                tcs.TrySetResult(true);
+        }
+
+        DataReceived += OnData;
+        try
+        {
+            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            timeoutCts.CancelAfter(TimeSpan.FromSeconds(timeoutSeconds));
+            using var reg = timeoutCts.Token.Register(() => tcs.TrySetResult(false));
+            return await tcs.Task;
+        }
+        finally
+        {
+            DataReceived -= OnData;
+        }
     }
 
     public async Task SendAsync(string text, CancellationToken ct = default)

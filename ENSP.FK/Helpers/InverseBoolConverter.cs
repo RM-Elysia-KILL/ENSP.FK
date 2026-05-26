@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Windows.Data;
 
-namespace ENSP.FK.Helpers;
+namespace ENSP.ZD.Helpers;
 
 public class InverseBoolConverter : IValueConverter
 {

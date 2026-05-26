@@ -1,10 +1,10 @@
 <Page
-  x:Class="ENSP.FK.Views.Pages.SettingsPage"
+  x:Class="ENSP.ZD.Views.Pages.SettingsPage"
   xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-  xmlns:helpers="clr-namespace:ENSP.FK.Helpers"
-  xmlns:local="clr-namespace:ENSP.FK.Views.Pages"
+  xmlns:helpers="clr-namespace:ENSP.ZD.Helpers"
+  xmlns:local="clr-namespace:ENSP.ZD.Views.Pages"
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
   xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
   Title="设置"
@@ -88,9 +88,62 @@
       <TextBlock Margin="0,16,0,4" Text="配置命令存放路径（留空使用默认）" />
       <TextBox Text="{Binding ViewModel.ConfigOutputPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
+      <!-- Image Recognition Template Capture -->
+      <TextBlock Margin="0,32,0,0" FontSize="20" FontWeight="Medium" Text="图像识别模板" />
+      <TextBlock Margin="0,12,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="截取 eNSP 画布上的设备图标作为模板，提高图像识别准确率。操作：输入设备型号 → 点击截取 → 窗口自动最小化 → 5 秒内将鼠标移到 eNSP 设备图标上" />
+
+      <TextBlock Margin="0,16,0,4" Text="设备型号（如 AR1220, S5700）" />
+      <Grid Margin="0,0,0,0">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <TextBox
+          Grid.Column="0"
+          Text="{Binding ViewModel.CaptureModel, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+          IsEnabled="{Binding ViewModel.IsCapturing, Mode=OneWay, Converter={StaticResource InverseBool}}"
+        />
+        <ui:Button
+          Grid.Column="1"
+          Margin="8,0,0,0"
+          Command="{Binding ViewModel.StartCaptureCommand, Mode=OneWay}"
+          Content="截取图标"
+          Icon="Image24"
+          Appearance="Primary"
+          IsEnabled="{Binding ViewModel.IsCapturing, Mode=OneWay, Converter={StaticResource InverseBool}}"
+        />
+      </Grid>
+
+      <TextBlock
+        Margin="0,8,0,0"
+        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+        Text="{Binding ViewModel.CaptureStatus, Mode=OneWay}"
+      />
+
       <!-- About -->
       <TextBlock Margin="0,32,0,0" FontSize="20" FontWeight="Medium" Text="关于" />
       <TextBlock Margin="0,12,0,0" Text="{Binding ViewModel.AppVersion, Mode=OneWay}" />
+      <ui:Button
+        Margin="0,12,0,0"
+        Command="{Binding ViewModel.ShowChangelogCommand}"
+        Content="更新公告"
+        Icon="Megaphone24"
+        Appearance="Info"
+      />
+      <Button
+        Margin="0,6,0,0"
+        Padding="0"
+        Background="Transparent"
+        BorderThickness="0"
+        Command="{Binding ViewModel.OpenGitHubCommand}"
+        Cursor="Hand"
+      >
+        <TextBlock
+          Foreground="{DynamicResource SystemAccentColorBrush}"
+          TextDecorations="Underline"
+          Text="{Binding ViewModel.GitHubUrl, Mode=OneWay}"
+        />
+      </Button>
     </StackPanel>
   </ScrollViewer>
 </Page>

@@ -1,20 +1,26 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using ENSP.FK.Models.Configuration;
-using ENSP.FK.Models.Topology;
-using ENSP.FK.Services;
+using ENSP.ZD.Models;
+using ENSP.ZD.Models.Configuration;
+using ENSP.ZD.Models.Topology;
+using ENSP.ZD.Services;
 using System.Collections.ObjectModel;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Windows;
 using Wpf.Ui.Abstractions.Controls;
 
-namespace ENSP.FK.ViewModels.Pages;
+namespace ENSP.ZD.ViewModels.Pages;
 
 public partial class EnspScanViewModel : ObservableObject, INavigationAware
 {
     private readonly ProjectSession _session;
+    private readonly VBoxDeviceService _vbox;
+    private readonly DeviceStartupService _startupService;
+    private readonly EnspGuiAutomationService _guiAuto;
+    private readonly DeviceConnectionManager _connectionMgr;
     private readonly Dictionary<string, TelnetConnection> _connections = new();
+    private readonly HashSet<string> _subscribedSessions = new();
 
     [ObservableProperty]
     private ObservableCollection<DeviceItem> _devices = new();
@@ -40,19 +46,70 @@ public partial class EnspScanViewModel : ObservableObject, INavigationAware
     [ObservableProperty]
     private bool _isPushing;
 
-    public EnspScanViewModel(ProjectSession session)
+    [ObservableProperty]
+    private bool _isStartingDevices;
+
+    [ObservableProperty]
+    private bool _isStoppingDevices;
+
+    public EnspScanViewModel(ProjectSession session, VBoxDeviceService vbox, DeviceStartupService startupService, EnspGuiAutomationService guiAuto, DeviceConnectionManager connectionMgr)
     {
         _session = session;
+        _vbox = vbox;
+        _startupService = startupService;
+        _guiAuto = guiAuto;
+        _connectionMgr = connectionMgr;
+
+        // Bridge DeviceConnectionManager terminal output → device list
+        _connectionMgr.Sessions.CollectionChanged += (_, _) =>
+        {
+            foreach (var session in _connectionMgr.Sessions)
+                SubscribeSessionOutput(session);
+        };
+    }
+
+    private void SubscribeSessionOutput(DeviceSessionViewModel session)
+    {
+        if (!_subscribedSessions.Add(session.DeviceName)) return;
+
+        session.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName != nameof(DeviceSessionViewModel.TerminalOutput)) return;
+            PushSessionOutputToDevice(session);
+        };
+    }
+
+    private void PushSessionOutputToDevice(DeviceSessionViewModel session)
+    {
+        var device = Devices.FirstOrDefault(d => d.Name == session.DeviceName);
+        if (device != null)
+        {
+            device.TerminalOutput = session.TerminalOutput;
+            if (SelectedDevice?.Name == device.Name)
+                TerminalOutput = session.TerminalOutput;
+        }
+    }
+
+    private void SyncAllSessionOutputs()
+    {
+        foreach (var session in _connectionMgr.Sessions)
+        {
+            SubscribeSessionOutput(session);
+            PushSessionOutputToDevice(session);
+        }
     }
 
     public Task OnNavigatedToAsync()
     {
         RefreshDevices();
+        SyncRuntimeStates();
         return Task.CompletedTask;
     }
 
     public Task OnNavigatedFromAsync()
     {
+        foreach (var device in Devices)
+            CancelDeviceStartup(device);
         DisconnectAll();
         return Task.CompletedTask;
     }
@@ -87,9 +144,14 @@ public partial class EnspScanViewModel : ObservableObject, INavigationAware
                 DeviceType = dev.Type,
                 ConsolePort = dev.ConsolePort,
                 HasConsole = hasConsole,
-                Address = hasConsole ? $"localhost:{dev.ConsolePort}" : "(无端口)"
+                Address = hasConsole ? $"localhost:{dev.ConsolePort}" : "(无端口)",
+                CanvasX = dev.X,
+                CanvasY = dev.Y,
+                Model = dev.Model
             });
         }
+
+        SyncAllSessionOutputs();
     }
 
     [RelayCommand]
@@ -175,8 +237,9 @@ public partial class EnspScanViewModel : ObservableObject, INavigationAware
             _connections[device.Name] = conn;
             device.IsConnected = true;
         }
-        catch
+        catch (Exception ex)
         {
+            System.Diagnostics.Debug.WriteLine($"Connect failed for {device.Name}: {ex.Message}");
             conn.Dispose();
         }
     }
@@ -365,12 +428,274 @@ public partial class EnspScanViewModel : ObservableObject, INavigationAware
         }
     }
 
-    private static async Task SendCommandsAsync(TelnetService telnet, DeviceItem device, List<ConfigCommand> commands)
+    private async Task SendCommandsAsync(TelnetService telnet, DeviceItem device, List<ConfigCommand> commands)
     {
         foreach (var cmd in commands)
         {
+            device.TerminalOutput += $"\r\n> {cmd.Command}\r\n";
+            if (SelectedDevice == device)
+                TerminalOutput = device.TerminalOutput;
+
             await telnet.SendAsync(cmd.Command);
             await Task.Delay(80);
+        }
+    }
+
+    [RelayCommand]
+    private async Task StartAllDevices()
+    {
+        var offDevices = Devices.Where(d => d.HasConsole && d.RuntimeState == DeviceRuntimeState.Off).ToList();
+        if (offDevices.Count == 0)
+        {
+            StatusText = "所有设备已启动或正在运行";
+            return;
+        }
+
+        IsStartingDevices = true;
+        var batchCts = new CancellationTokenSource();
+        try
+        {
+            // Phase 0: Click eNSP's "start all" toolbar button once
+            StatusText = "正在点击 eNSP 工具栏「启动全部设备」...";
+            var error = await _guiAuto.ClickToolbarButtonAsync("start_all", batchCts.Token);
+
+            if (error != null)
+            {
+                StatusText = $"启动失败: {error}";
+                return;
+            }
+
+            StatusText = $"已点击启动按钮，等待设备上线...";
+            await Task.Delay(3000, batchCts.Token); // Let eNSP process the command
+
+            // Phase 1: Parallel TCP port polling for all devices
+            int total = offDevices.Count;
+            int ready = 0;
+
+            var tasks = offDevices.Select(device =>
+            {
+                device._startupCts = CancellationTokenSource.CreateLinkedTokenSource(batchCts.Token);
+                device.IsBusy = true;
+
+                var progress = new Progress<DeviceStartupProgress>(p =>
+                {
+                    Dispatch(() =>
+                    {
+                        device.RuntimeState = p.State;
+                        device.RuntimeStatusText = p.Message;
+                        device.StartupPhase = p.Phase;
+                        device.StartupDetail = p.Message;
+                        device.StartupProgress = p.ProgressPercent;
+                        if (p.State == DeviceRuntimeState.Ready || p.State == DeviceRuntimeState.Error)
+                            device.IsBusy = false;
+                    });
+                });
+
+                return _startupService.WaitForDeviceReadyAsync(
+                    device.Name, device.ConsolePort,
+                    device.CanvasX, device.CanvasY, device.Model,
+                    progress, device._startupCts.Token,
+                    skipGuiAutomation: true)
+                    .ContinueWith(t =>
+                    {
+                        device._startupCts?.Dispose();
+                        device._startupCts = null;
+                        if (t.IsCompletedSuccessfully && t.Result)
+                            Interlocked.Increment(ref ready);
+                        return t.IsCompletedSuccessfully && t.Result;
+                    }, TaskScheduler.Default);
+            }).ToArray();
+
+            // Report progress while waiting
+            _ = Task.Run(async () =>
+            {
+                while (!batchCts.Token.IsCancellationRequested)
+                {
+                    var currentReady = offDevices.Count(d => d.RuntimeState == DeviceRuntimeState.Ready);
+                    var currentBooting = offDevices.Count(d => d.RuntimeState == DeviceRuntimeState.Booting);
+                    Dispatch(() => StatusText = $"设备启动中... 就绪 {currentReady}/{total}");
+                    if (currentReady + offDevices.Count(d => d.RuntimeState == DeviceRuntimeState.Error) >= total)
+                        break;
+                    await Task.Delay(2000, batchCts.Token);
+                }
+            }, batchCts.Token);
+
+            await Task.WhenAll(tasks);
+
+            var finalReady = offDevices.Count(d => d.RuntimeState == DeviceRuntimeState.Ready);
+            StatusText = $"启动完成: {finalReady}/{total} 个设备就绪";
+        }
+        catch (OperationCanceledException)
+        {
+            StatusText = "启动已取消";
+        }
+        finally
+        {
+            batchCts.Dispose();
+            IsStartingDevices = false;
+        }
+    }
+
+    [RelayCommand]
+    private async Task StopAllDevices()
+    {
+        var activeDevices = Devices.Where(d => d.RuntimeState != DeviceRuntimeState.Off).ToList();
+        if (activeDevices.Count == 0) return;
+
+        IsStoppingDevices = true;
+        try
+        {
+            foreach (var device in activeDevices)
+            {
+                CancelDeviceStartup(device);
+                await Task.Run(() => _vbox.StopDevice(device.Name));
+                device.RuntimeState = DeviceRuntimeState.Off;
+                device.RuntimeStatusText = string.Empty;
+                device.IsBusy = false;
+            }
+            StatusText = $"已停止 {activeDevices.Count} 个设备";
+        }
+        finally
+        {
+            IsStoppingDevices = false;
+        }
+    }
+
+    private async Task StartDeviceAsync(DeviceItem device)
+    {
+        if (device.RuntimeState != DeviceRuntimeState.Off)
+            return;
+
+        if (!device.HasConsole)
+        {
+            device.RuntimeState = DeviceRuntimeState.Error;
+            device.RuntimeStatusText = "设备无控制台端口";
+            return;
+        }
+
+        device._startupCts = new CancellationTokenSource();
+        device.IsBusy = true;
+
+        var progress = new Progress<DeviceStartupProgress>(p =>
+        {
+            Dispatch(() =>
+            {
+                device.RuntimeState = p.State;
+                device.RuntimeStatusText = p.Message;
+                device.StartupPhase = p.Phase;
+                device.StartupDetail = p.Message;
+                device.StartupProgress = p.ProgressPercent;
+                if (p.State == DeviceRuntimeState.Ready || p.State == DeviceRuntimeState.Error)
+                    device.IsBusy = false;
+            });
+        });
+
+        try
+        {
+            StatusText = $"正在启动 {device.Name}...";
+            var success = await _startupService.WaitForDeviceReadyAsync(
+                device.Name, device.ConsolePort,
+                device.CanvasX, device.CanvasY, device.Model,
+                progress, device._startupCts.Token);
+
+            StatusText = success
+                ? $"{device.Name} 已就绪"
+                : $"{device.Name} 启动失败: {device.RuntimeStatusText}";
+        }
+        catch (OperationCanceledException)
+        {
+            Dispatch(() =>
+            {
+                device.RuntimeState = DeviceRuntimeState.Off;
+                device.RuntimeStatusText = string.Empty;
+                device.IsBusy = false;
+            });
+            StatusText = $"{device.Name} 启动已取消";
+        }
+        catch (Exception ex)
+        {
+            Dispatch(() =>
+            {
+                device.RuntimeState = DeviceRuntimeState.Error;
+                device.RuntimeStatusText = $"启动异常: {ex.Message}";
+                device.IsBusy = false;
+            });
+            StatusText = $"{device.Name} 启动异常: {ex.Message}";
+        }
+        finally
+        {
+            device._startupCts?.Dispose();
+            device._startupCts = null;
+        }
+    }
+
+    private static void CancelDeviceStartup(DeviceItem device)
+    {
+        try { device._startupCts?.Cancel(); }
+        catch (ObjectDisposedException) { }
+    }
+
+    private void SyncRuntimeStates()
+    {
+        // Quick pre-scan: which device ports are listening?
+        var listeningPorts = DeviceStartupService.ScanListeningPorts();
+        System.Diagnostics.Debug.WriteLine($"[SyncRuntime] Listening ports: [{string.Join(", ", listeningPorts.OrderBy(p => p))}]");
+
+        foreach (var device in Devices)
+        {
+            if (device.ConsolePort <= 0)
+            {
+                device.RuntimeState = DeviceRuntimeState.Off;
+                device.RuntimeStatusText = "无端口";
+                continue;
+            }
+
+            if (!listeningPorts.Contains(device.ConsolePort))
+            {
+                device.RuntimeState = DeviceRuntimeState.Off;
+                device.RuntimeStatusText = "未启动";
+                continue;
+            }
+
+            // Port is listening — probe deeper to confirm readiness
+            _ = ProbeAndSetStateAsync(device).ContinueWith(t =>
+            {
+                if (t.IsFaulted)
+                    System.Diagnostics.Debug.WriteLine($"Probe state failed for {device.Name}: {t.Exception?.InnerException?.Message}");
+            }, TaskScheduler.Default);
+        }
+    }
+
+    private async Task ProbeAndSetStateAsync(DeviceItem device)
+    {
+        try
+        {
+            using var client = new System.Net.Sockets.TcpClient();
+            var connectTask = client.ConnectAsync("127.0.0.1", device.ConsolePort);
+            var timeout = Task.Delay(500);
+            var completed = await Task.WhenAny(connectTask, timeout);
+
+            Dispatch(() =>
+            {
+                if (completed == connectTask && client.Connected)
+                {
+                    device.RuntimeState = DeviceRuntimeState.Ready;
+                    device.RuntimeStatusText = "设备已就绪";
+                }
+                else
+                {
+                    device.RuntimeState = DeviceRuntimeState.Booting;
+                    device.RuntimeStatusText = "虚拟机运行中 (启动中...)";
+                }
+            });
+        }
+        catch
+        {
+            Dispatch(() =>
+            {
+                device.RuntimeState = DeviceRuntimeState.Booting;
+                device.RuntimeStatusText = "虚拟机运行中";
+            });
         }
     }
 
@@ -439,11 +764,37 @@ public partial class DeviceItem : ObservableObject
     [ObservableProperty]
     private string _terminalOutput = string.Empty;
 
+    [ObservableProperty]
+    private DeviceRuntimeState _runtimeState = DeviceRuntimeState.Off;
+
+    [ObservableProperty]
+    private string _runtimeStatusText = string.Empty;
+
+    [ObservableProperty]
+    private bool _isBusy;
+
+    [ObservableProperty]
+    private double _startupProgress;
+
+    [ObservableProperty]
+    private string _startupPhase = string.Empty;
+
+    [ObservableProperty]
+    private string _startupDetail = string.Empty;
+
+    internal CancellationTokenSource? _startupCts;
+
+    public double CanvasX { get; set; }
+    public double CanvasY { get; set; }
+    public string Model { get; set; } = string.Empty;
+
     public string DeviceTypeText => DeviceType switch
     {
         DeviceType.Router => "路由器",
         DeviceType.Switch => "交换机",
         DeviceType.Firewall => "防火墙",
+        DeviceType.PC => "PC",
+        DeviceType.Server => "服务器",
         _ => "未知"
     };
 }

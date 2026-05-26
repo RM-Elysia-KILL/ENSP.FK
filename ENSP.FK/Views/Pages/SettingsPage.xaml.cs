@@ -1,8 +1,8 @@
-﻿using ENSP.FK.ViewModels.Pages;
+﻿using ENSP.ZD.ViewModels.Pages;
 using System.Windows;
 using Wpf.Ui.Abstractions.Controls;
 
-namespace ENSP.FK.Views.Pages
+namespace ENSP.ZD.Views.Pages
 {
     public partial class SettingsPage : INavigableView<SettingsViewModel>
     {

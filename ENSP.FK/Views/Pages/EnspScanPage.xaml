@@ -1,13 +1,13 @@
 <Page
-  x:Class="ENSP.FK.Views.Pages.EnspScanPage"
+  x:Class="ENSP.ZD.Views.Pages.EnspScanPage"
   xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-  xmlns:helpers="clr-namespace:ENSP.FK.Helpers"
-  xmlns:local="clr-namespace:ENSP.FK.Views.Pages"
+  xmlns:helpers="clr-namespace:ENSP.ZD.Helpers"
+  xmlns:local="clr-namespace:ENSP.ZD.Views.Pages"
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
   xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-  xmlns:vm="clr-namespace:ENSP.FK.ViewModels.Pages"
+  xmlns:vm="clr-namespace:ENSP.ZD.ViewModels.Pages"
   Title="ENSP 扫描"
   d:DataContext="{d:DesignInstance local:EnspScanPage, IsDesignTimeCreatable=False}"
   d:DesignHeight="600"
@@ -51,32 +51,127 @@
         >
           <ListBox.ItemTemplate>
             <DataTemplate DataType="vm:DeviceItem">
-              <Grid Margin="4,5" ColumnDefinitions="Auto,*,Auto">
-                <ui:SymbolIcon
-                  Grid.Column="0"
-                  Width="20"
-                  Height="20"
-                  Symbol="Globe24"
-                  VerticalAlignment="Center"
-                />
-                <StackPanel Grid.Column="1" Margin="8,0,0,0" VerticalAlignment="Center">
-                  <TextBlock FontSize="13" FontWeight="Medium" Text="{Binding Name, Mode=OneWay}" />
-                  <TextBlock FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}">
-                    <Run Text="{Binding DeviceTypeText, Mode=OneWay}" />
+              <Border Margin="4,5" Padding="4" CornerRadius="4">
+                <Border.Style>
+                  <Style TargetType="Border">
+                    <Style.Triggers>
+                      <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                        <Setter Property="Background" Value="{DynamicResource SolidBackgroundFillColorSecondaryBrush}" />
+                      </DataTrigger>
+                    </Style.Triggers>
+                  </Style>
+                </Border.Style>
+                <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto,Auto">
+                  <ui:SymbolIcon
+                    Grid.Row="0" Grid.Column="0"
+                    Width="20"
+                    Height="20"
+                    Symbol="Globe24"
+                    VerticalAlignment="Center"
+                  />
+                  <StackPanel Grid.Row="0" Grid.Column="1" Margin="8,0,0,0" VerticalAlignment="Center">
+                    <TextBlock FontSize="13" FontWeight="Medium" Text="{Binding Name, Mode=OneWay}" />
+                    <TextBlock FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}">
+                      <Run Text="{Binding DeviceTypeText, Mode=OneWay}" />
+                      <Run Text=" — " />
+                      <Run Text="{Binding Address, Mode=OneWay}" />
+                    </TextBlock>
+                  </StackPanel>
+                  <!-- Progress bar visible during startup -->
+                  <ProgressBar
+                    Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
+                    Height="6"
+                    Margin="0,6,0,2"
+                    Maximum="100"
+                    Minimum="0"
+                    Visibility="{Binding IsBusy, Mode=OneWay, Converter={StaticResource BoolToVisibility}}"
+                    Value="{Binding StartupProgress, Mode=OneWay}"
+                  />
+                  <!-- Phase + detail text visible during startup -->
+                  <TextBlock
+                    Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3"
+                    FontSize="10"
+                    Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                    TextTrimming="CharacterEllipsis"
+                    Visibility="{Binding IsBusy, Mode=OneWay, Converter={StaticResource BoolToVisibility}}"
+                  >
+                    <Run Text="{Binding StartupPhase, Mode=OneWay}" />
                     <Run Text=" — " />
-                    <Run Text="{Binding Address, Mode=OneWay}" />
+                    <Run Text="{Binding StartupDetail, Mode=OneWay}" />
                   </TextBlock>
+                <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                  <!-- Runtime state: busy (Cloning/Booting/Error/Stopping) -->
+                  <Ellipse
+                    Width="10"
+                    Height="10"
+                    Margin="0,0,4,0"
+                    VerticalAlignment="Center"
+                    Visibility="{Binding IsBusy, Mode=OneWay, Converter={StaticResource BoolToVisibility}}"
+                  >
+                    <Ellipse.Style>
+                      <Style TargetType="Ellipse">
+                        <Style.Triggers>
+                          <DataTrigger Binding="{Binding RuntimeState}" Value="Cloning">
+                            <Setter Property="Fill" Value="{DynamicResource SystemFillColorCautionBrush}" />
+                          </DataTrigger>
+                          <DataTrigger Binding="{Binding RuntimeState}" Value="Booting">
+                            <Setter Property="Fill" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+                          </DataTrigger>
+                          <DataTrigger Binding="{Binding RuntimeState}" Value="Error">
+                            <Setter Property="Fill" Value="#FFD13438" />
+                          </DataTrigger>
+                          <DataTrigger Binding="{Binding RuntimeState}" Value="Stopping">
+                            <Setter Property="Fill" Value="{DynamicResource SystemFillColorCautionBrush}" />
+                          </DataTrigger>
+                        </Style.Triggers>
+                      </Style>
+                    </Ellipse.Style>
+                  </Ellipse>
+                  <!-- Runtime state: Ready -->
+                  <Ellipse
+                    Width="10"
+                    Height="10"
+                    Margin="0,0,4,0"
+                    Fill="#FF107C10"
+                    VerticalAlignment="Center"
+                  >
+                    <Ellipse.Style>
+                      <Style TargetType="Ellipse">
+                        <Style.Triggers>
+                          <DataTrigger Binding="{Binding RuntimeState}" Value="Ready">
+                            <Setter Property="Visibility" Value="Visible" />
+                          </DataTrigger>
+                          <DataTrigger Binding="{Binding RuntimeState}" Value="Off">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                          </DataTrigger>
+                          <DataTrigger Binding="{Binding RuntimeState}" Value="Cloning">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                          </DataTrigger>
+                          <DataTrigger Binding="{Binding RuntimeState}" Value="Booting">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                          </DataTrigger>
+                          <DataTrigger Binding="{Binding RuntimeState}" Value="Error">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                          </DataTrigger>
+                          <DataTrigger Binding="{Binding RuntimeState}" Value="Stopping">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                          </DataTrigger>
+                        </Style.Triggers>
+                      </Style>
+                    </Ellipse.Style>
+                  </Ellipse>
+                  <!-- Telnet connection indicator -->
+                  <ui:SymbolIcon
+                    Width="14"
+                    Height="14"
+                    Foreground="{DynamicResource AccentFillColorDefaultBrush}"
+                    Symbol="CheckmarkCircle24"
+                    VerticalAlignment="Center"
+                    Visibility="{Binding IsConnected, Mode=OneWay, Converter={StaticResource BoolToVisibility}}"
+                  />
                 </StackPanel>
-                <ui:SymbolIcon
-                  Grid.Column="2"
-                  Width="14"
-                  Height="14"
-                  Foreground="{DynamicResource AccentFillColorDefaultBrush}"
-                  Symbol="CheckmarkCircle24"
-                  VerticalAlignment="Center"
-                  Visibility="{Binding IsConnected, Mode=OneWay, Converter={StaticResource BoolToVisibility}}"
-                />
               </Grid>
+              </Border>
             </DataTemplate>
           </ListBox.ItemTemplate>
         </ListBox>
@@ -153,6 +248,23 @@
             Content="断开选中"
             Icon="DismissCircle24"
             IsEnabled="{Binding ViewModel.IsConnected, Mode=OneWay}"
+          />
+          <Border Margin="16,4" Width="1" Background="{DynamicResource CardStrokeFillColorDefaultBrush}" />
+          <!-- 设备启动：通过 eNSP 窗口图像识别自动点击右键菜单"启动" -->
+          <ui:Button
+            Margin="16,0,0,0"
+            Command="{Binding ViewModel.StartAllDevicesCommand, Mode=OneWay}"
+            Content="启动全部设备"
+            Icon="Play24"
+            Appearance="Success"
+            ToolTip="通过 eNSP 窗口自动图像识别点击启动 — 请确保 eNSP 已打开对应拓扑"
+            IsEnabled="{Binding ViewModel.IsStartingDevices, Mode=OneWay, Converter={StaticResource InverseBool}}"
+          />
+          <ui:Button
+            Margin="8,0,0,0"
+            Command="{Binding ViewModel.StopAllDevicesCommand, Mode=OneWay}"
+            Content="停止全部"
+            Icon="DismissCircle24"
           />
           <Border Margin="16,4" Width="1" Background="{DynamicResource CardStrokeFillColorDefaultBrush}" />
           <ui:Button

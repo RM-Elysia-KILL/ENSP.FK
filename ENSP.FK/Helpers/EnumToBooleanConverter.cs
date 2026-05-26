@@ -2,7 +2,7 @@
 using System.Windows.Data;
 using Wpf.Ui.Appearance;
 
-namespace ENSP.FK.Helpers
+namespace ENSP.ZD.Helpers
 {
     internal class EnumToBooleanConverter : IValueConverter
     {

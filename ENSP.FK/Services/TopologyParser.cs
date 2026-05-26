@@ -1,11 +1,11 @@
-using ENSP.FK.Models.Topology;
+using ENSP.ZD.Models.Topology;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
-namespace ENSP.FK.Services;
+namespace ENSP.ZD.Services;
 
 public partial class TopologyParser
 {
@@ -36,6 +36,8 @@ public partial class TopologyParser
 
     // eNSP .topo files are typically UTF-8 but often have encoding="UNICODE" in the XML
     // declaration, which confuses .NET XML parser into trying UTF-16. We fix that here.
+    // Additionally, eNSP being a Chinese application may encode .topo files in GBK when
+    // the topology contains Chinese annotations. We detect garbled decoding and fall back.
     private static XDocument LoadTopoXml(Stream stream)
     {
         using var ms = new MemoryStream();
@@ -44,13 +46,29 @@ public partial class TopologyParser
 
         string xml;
         if (bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF)
+        {
             xml = Encoding.UTF8.GetString(bytes, 3, bytes.Length - 3);
+        }
         else if (bytes.Length >= 2 && bytes[0] == 0xFF && bytes[1] == 0xFE)
+        {
             xml = Encoding.Unicode.GetString(bytes, 2, bytes.Length - 2);
+        }
         else if (bytes.Length >= 2 && bytes[0] == 0xFE && bytes[1] == 0xFF)
+        {
             xml = Encoding.BigEndianUnicode.GetString(bytes, 2, bytes.Length - 2);
+        }
         else
+        {
             xml = Encoding.UTF8.GetString(bytes);
+
+            // eNSP may encode .topo in GBK when Chinese text is present.
+            // U+FFFD (�) in the result signals UTF-8 decoding failure → retry with GBK.
+            if (xml.Contains('�'))
+            {
+                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+                xml = Encoding.GetEncoding("GBK").GetString(bytes);
+            }
+        }
 
         // Fix non-standard "UNICODE" encoding declaration that .NET doesn't recognize
         xml = EncodingDeclRegex().Replace(xml, "encoding=\"UTF-8\"");
@@ -108,24 +126,77 @@ public partial class TopologyParser
 
             guidToDevice[guid] = name;
 
+            double x = 0, y = 0;
+            var cxStr = devEl.Attribute("cx")?.Value;
+            var cyStr = devEl.Attribute("cy")?.Value;
+            if (cxStr != null && cyStr != null)
+            {
+                double.TryParse(cxStr, out x);
+                double.TryParse(cyStr, out y);
+            }
+
             var device = new Device
             {
                 Name = name,
+                Model = model,
                 Type = ParseDeviceType(model),
-                ConsolePort = comPort
+                ConsolePort = comPort,
+                X = x,
+                Y = y
             };
 
-            foreach (var slot in devEl.Elements("slot"))
-            {
-                foreach (var iface in slot.Elements("interface"))
-                {
-                    var ifName = iface.Attribute("interfacename")?.Value ?? "Ethernet";
-                    var countStr = iface.Attribute("count")?.Value ?? "0";
-                    if (!int.TryParse(countStr, out var count)) count = 0;
+            // Collect interface blocks with slot assignment
+            var ifaceBlocks = new List<(string IfName, int Count, int SlotNumber)>();
 
-                    for (int i = 0; i < count; i++)
-                        device.Interfaces.Add(new DeviceInterface { Name = $"{ifName}0/0/{i}" });
+            // Parse slot elements to determine expansion slot count
+            var slotElements = devEl.Elements("slot").ToList();
+            int expansionCount = slotElements.Count(s => s.Attribute("isMainBoard")?.Value != "1");
+
+            // Collect all interface blocks first
+            var rawIfaces = new List<(string IfName, int Count)>();
+            foreach (var iface in devEl.Elements("slot").Elements("interface"))
+            {
+                var ifName = iface.Attribute("interfacename")?.Value ?? "Ethernet";
+                var countStr = iface.Attribute("count")?.Value ?? "0";
+                if (!int.TryParse(countStr, out var count)) count = 0;
+                if (count > 0)
+                    rawIfaces.Add((ifName, count));
+            }
+
+            // Assign slot numbers: last expansionCount blocks go to slots 1..N, rest on slot 0
+            int mainBoardBlocks = rawIfaces.Count - expansionCount;
+            for (int idx = 0; idx < rawIfaces.Count; idx++)
+            {
+                int slotNum = idx < mainBoardBlocks ? 0 : idx - mainBoardBlocks + 1;
+                ifaceBlocks.Add((rawIfaces[idx].IfName, rawIfaces[idx].Count, slotNum));
+            }
+
+            // Generate interface names: switches use 1-based, routers use 0-based port numbering
+            bool isSwitch = IsSwitchModel(model);
+            int portOffset = isSwitch ? 1 : 0;
+            int currentSlot = -1;
+            var prevCountByType = new Dictionary<string, int>();
+
+            foreach (var (ifName, count, slotNum) in ifaceBlocks)
+            {
+                // Reset per-type counters when slot changes
+                if (slotNum != currentSlot)
+                {
+                    currentSlot = slotNum;
+                    prevCountByType.Clear();
                 }
+
+                int prevSameType = prevCountByType.GetValueOrDefault(ifName, 0);
+                for (int i = 0; i < count; i++)
+                {
+                    int localIdx = prevSameType + i + portOffset;
+                    device.Interfaces.Add(new DeviceInterface
+                    {
+                        Name = $"{ifName}{slotNum}/0/{localIdx}",
+                        SlotIndex = slotNum
+                    });
+                }
+                prevCountByType[ifName] = prevSameType + count;
             }
 
             topology.Devices.Add(device);
@@ -150,24 +221,22 @@ public partial class TopologyParser
             if (!guidToDevice.TryGetValue(srcGuid, out var devA)) continue;
             if (!guidToDevice.TryGetValue(dstGuid, out var devB)) continue;
 
-            string ifA = string.Empty, ifB = string.Empty;
-            var pair = line.Element("interfacePair");
-            if (pair != null)
+            // A <line> can have multiple <interfacePair> elements (parallel links)
+            foreach (var pair in line.Elements("interfacePair"))
             {
-                ifA = GetInterfaceByIndex(deviceIfaces, devA, pair.Attribute("srcIndex")?.Value);
-                ifB = GetInterfaceByIndex(deviceIfaces, devB, pair.Attribute("tarIndex")?.Value);
-            }
+                string ifA = GetInterfaceByIndex(deviceIfaces, devA, pair.Attribute("srcIndex")?.Value);
+                string ifB = GetInterfaceByIndex(deviceIfaces, devB, pair.Attribute("tarIndex")?.Value);
+                double.TryParse(pair.Attribute("srcBoundRect_X")?.Value ?? string.Empty, out double x1);
+                double.TryParse(pair.Attribute("srcBoundRect_Y")?.Value ?? string.Empty, out double y1);
+                double.TryParse(pair.Attribute("tarBoundRect_X")?.Value ?? string.Empty, out double x2);
+                double.TryParse(pair.Attribute("tarBoundRect_Y")?.Value ?? string.Empty, out double y2);
 
-            var dup = topology.Links.Any(l =>
-                (l.DeviceA == devA && l.DeviceB == devB) ||
-                (l.DeviceB == devA && l.DeviceA == devB));
-
-            if (!dup)
-            {
                 topology.Links.Add(new TopologyLink
                 {
                     DeviceA = devA, InterfaceA = ifA,
-                    DeviceB = devB, InterfaceB = ifB
+                    DeviceB = devB, InterfaceB = ifB,
+                    X1 = x1, Y1 = y1,
+                    X2 = x2, Y2 = y2
                 });
             }
         }
@@ -196,6 +265,18 @@ public partial class TopologyParser
             return DeviceType.Switch;
         if (t.Contains("firewall") || t.Contains("usg") || t.Contains("fw"))
             return DeviceType.Firewall;
+        if (t.StartsWith("pc") || t.Contains("client") || t.Contains("pc-"))
+            return DeviceType.PC;
+        if (t.Contains("server"))
+            return DeviceType.Server;
         return DeviceType.Router;
+    }
+
+    // Huawei VRP port numbering: routers use 0-based, switches use 1-based
+    private static bool IsSwitchModel(string model)
+    {
+        if (string.IsNullOrEmpty(model)) return false;
+        return model.StartsWith("S", StringComparison.OrdinalIgnoreCase)
+            || model.StartsWith("CE", StringComparison.OrdinalIgnoreCase);
     }
 }

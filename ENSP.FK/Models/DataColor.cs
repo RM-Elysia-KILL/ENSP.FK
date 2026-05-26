@@ -1,6 +1,6 @@
 ﻿using System.Windows.Media;
 
-namespace ENSP.FK.Models
+namespace ENSP.ZD.Models
 {
     public struct DataColor
     {

@@ -1,4 +1,4 @@
-namespace ENSP.FK.Models.Topology;
+namespace ENSP.ZD.Models.Topology;
 
 public class DeviceInterface
 {
@@ -7,4 +7,5 @@ public class DeviceInterface
     public string SubnetMask { get; set; } = string.Empty;
     public string ConnectedToDevice { get; set; } = string.Empty;
     public string ConnectedToInterface { get; set; } = string.Empty;
+    public int SlotIndex { get; set; }
 }

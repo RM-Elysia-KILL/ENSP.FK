@@ -5,7 +5,7 @@ using System.Windows.Data;
 using System.Windows.Media;
 using Wpf.Ui.Controls;
 
-namespace ENSP.FK.Services;
+namespace ENSP.ZD.Services;
 
 public class InstallStatusToSymbolConverter : IValueConverter
 {

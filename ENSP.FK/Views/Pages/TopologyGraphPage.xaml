@@ -1,0 +1,211 @@
+<Page
+  x:Class="ENSP.ZD.Views.Pages.TopologyGraphPage"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:helpers="clr-namespace:ENSP.ZD.Helpers"
+  xmlns:local="clr-namespace:ENSP.ZD.Views.Pages"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  xmlns:vm="clr-namespace:ENSP.ZD.ViewModels.Pages"
+  Title="拓扑结构"
+  d:DataContext="{d:DesignInstance local:TopologyGraphPage, IsDesignTimeCreatable=False}"
+  d:DesignHeight="600"
+  d:DesignWidth="1000"
+  ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
+  ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+  Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+  mc:Ignorable="d"
+>
+  <Page.Resources>
+    <helpers:BoolToVisibilityConverter x:Key="BoolToVisibility" />
+    <helpers:InverseBoolConverter x:Key="InverseBool" />
+  </Page.Resources>
+
+  <Grid Margin="16">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+
+    <!-- Toolbar -->
+    <Border
+      Grid.Row="0"
+      Margin="0,0,0,8"
+      Padding="12,8"
+      Background="{DynamicResource SolidBackgroundFillColorSecondaryBrush}"
+      CornerRadius="6"
+    >
+      <StackPanel Orientation="Horizontal">
+        <ui:SymbolIcon
+          Width="24"
+          Height="24"
+          VerticalAlignment="Center"
+          Symbol="Flowchart24"
+        />
+        <TextBlock
+          Margin="8,0,0,0"
+          VerticalAlignment="Center"
+          FontSize="15"
+          FontWeight="SemiBold"
+          Text="拓扑结构"
+        />
+        <TextBlock
+          Margin="16,0,0,0"
+          VerticalAlignment="Center"
+          FontSize="12"
+          Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+          Text="{Binding ViewModel.StatusText, Mode=OneWay}"
+        />
+        <TextBlock
+          Margin="16,0,0,0"
+          VerticalAlignment="Center"
+          FontSize="11"
+          Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+          Text="拖拽移动  |  滚轮缩放"
+        />
+      </StackPanel>
+    </Border>
+
+    <!-- Graph canvas area -->
+    <Border
+      x:Name="CanvasHost"
+      Grid.Row="1"
+      BorderBrush="{DynamicResource CardStrokeFillColorDefaultBrush}"
+      BorderThickness="1"
+      CornerRadius="6"
+      ClipToBounds="True"
+      MouseWheel="TopologyCanvas_MouseWheel"
+    >
+      <Grid>
+        <Grid.Background>
+          <DrawingBrush Viewport="0,0,20,20" ViewportUnits="Absolute" TileMode="Tile">
+            <DrawingBrush.Drawing>
+              <DrawingGroup>
+                <GeometryDrawing Brush="White">
+                  <GeometryDrawing.Geometry>
+                    <RectangleGeometry Rect="0,0,20,20" />
+                  </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+                <GeometryDrawing Geometry="M0,0 L20,0 M0,0 L0,20">
+                  <GeometryDrawing.Pen>
+                    <Pen Brush="#D0D0D0" Thickness="0.5" />
+                  </GeometryDrawing.Pen>
+                </GeometryDrawing>
+              </DrawingGroup>
+            </DrawingBrush.Drawing>
+          </DrawingBrush>
+        </Grid.Background>
+
+        <!-- Empty state -->
+        <TextBlock
+          HorizontalAlignment="Center"
+          VerticalAlignment="Center"
+          FontSize="14"
+          Foreground="#999999"
+          Text="未加载拓扑文件 — 请先在「拓扑导入」页面导入 .topo 文件"
+          Visibility="{Binding ViewModel.HasTopology, Mode=OneWay, Converter={StaticResource InverseBool}}"
+        />
+
+        <!-- Canvas -->
+        <Canvas
+          x:Name="TopologyCanvas"
+          Width="{Binding ViewModel.CanvasWidth}"
+          Height="{Binding ViewModel.CanvasHeight}"
+          Background="Transparent"
+          MouseLeftButtonDown="TopologyCanvas_MouseLeftButtonDown"
+          MouseLeftButtonUp="TopologyCanvas_MouseLeftButtonUp"
+          MouseRightButtonDown="TopologyCanvas_MouseRightButtonDown"
+          MouseRightButtonUp="TopologyCanvas_MouseRightButtonUp"
+          MouseMove="TopologyCanvas_MouseMove"
+          Visibility="{Binding ViewModel.HasTopology, Mode=OneWay, Converter={StaticResource BoolToVisibility}}"
+        >
+          <Canvas.RenderTransform>
+            <TransformGroup>
+              <ScaleTransform x:Name="ZoomTransform" ScaleX="1" ScaleY="1" />
+              <TranslateTransform x:Name="PanTransform" X="0" Y="0" />
+            </TransformGroup>
+          </Canvas.RenderTransform>
+
+          <!-- Links layer -->
+          <ItemsControl ItemsSource="{Binding ViewModel.LinkVms, Mode=OneWay}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <Canvas />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate DataType="vm:TopologyLinkViewModel">
+                <Canvas>
+                  <Line
+                    Stroke="#557799"
+                    StrokeThickness="2"
+                    X1="{Binding X1}"
+                    X2="{Binding X2}"
+                    Y1="{Binding Y1}"
+                    Y2="{Binding Y2}"
+                  />
+                  <!-- Interface label near endpoint A -->
+                  <TextBlock Canvas.Left="{Binding X1}" Canvas.Top="{Binding Y1}"
+                             FontSize="8" Foreground="#556677"
+                             Margin="4,-12,0,0"
+                             Text="{Binding LabelA}" />
+                  <!-- Interface label near endpoint B -->
+                  <TextBlock Canvas.Left="{Binding X2}" Canvas.Top="{Binding Y2}"
+                             FontSize="8" Foreground="#556677"
+                             Margin="4,-12,0,0"
+                             Text="{Binding LabelB}" />
+                </Canvas>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+
+          <!-- Nodes layer -->
+          <ItemsControl ItemsSource="{Binding ViewModel.Nodes, Mode=OneWay}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <Canvas />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate DataType="vm:TopologyNode">
+                <Canvas Width="80" Height="84" Cursor="Hand"
+                        ToolTip="{Binding InterfacesText}">
+                  <!-- Device icon from eNSP installation -->
+                  <Image Width="64" Height="48"
+                         Source="{Binding IconPath}"
+                         Stretch="Uniform"
+                         Canvas.Left="8" Canvas.Top="0" />
+                  <!-- Status indicator dot -->
+                  <Ellipse Width="10" Height="10"
+                           Fill="{Binding StatusIndicatorColor}"
+                           Canvas.Left="35" Canvas.Top="44" />
+                  <!-- Device name -->
+                  <TextBlock Canvas.Left="0" Canvas.Top="56" Width="80"
+                             FontSize="10"
+                             Foreground="#1A1A1A"
+                             HorizontalAlignment="Center" TextAlignment="Center"
+                             TextTrimming="CharacterEllipsis"
+                             Text="{Binding DeviceName}" />
+                  <!-- Port info -->
+                  <TextBlock Canvas.Left="0" Canvas.Top="70" Width="80"
+                             FontSize="8"
+                             Foreground="#888888"
+                             HorizontalAlignment="Center" TextAlignment="Center"
+                             TextTrimming="CharacterEllipsis"
+                             Text="{Binding InterfacesText}" />
+                </Canvas>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+            <ItemsControl.ItemContainerStyle>
+              <Style TargetType="ContentPresenter">
+                <Setter Property="Canvas.Left" Value="{Binding X}" />
+                <Setter Property="Canvas.Top" Value="{Binding Y}" />
+              </Style>
+            </ItemsControl.ItemContainerStyle>
+          </ItemsControl>
+        </Canvas>
+      </Grid>
+    </Border>
+  </Grid>
+</Page>

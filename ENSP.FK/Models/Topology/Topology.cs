@@ -1,4 +1,4 @@
-namespace ENSP.FK.Models.Topology;
+namespace ENSP.ZD.Models.Topology;
 
 public class Topology
 {

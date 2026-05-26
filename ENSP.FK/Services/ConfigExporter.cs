@@ -1,8 +1,8 @@
-using ENSP.FK.Models.Configuration;
+using ENSP.ZD.Models.Configuration;
 using System.IO;
 using System.Text;
 
-namespace ENSP.FK.Services;
+namespace ENSP.ZD.Services;
 
 public class ConfigExporter
 {

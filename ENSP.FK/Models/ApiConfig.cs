@@ -1,13 +1,13 @@
 using System.IO;
 using System.Text.Json;
 
-namespace ENSP.FK.Models;
+namespace ENSP.ZD.Models;
 
 public class ApiConfig
 {
     private static readonly string ConfigDir = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "ENSP.FK");
+        "ENSP.ZD");
 
     public static readonly string ConfigPath = Path.Combine(ConfigDir, "apiconfig.json");
 
@@ -16,6 +16,7 @@ public class ApiConfig
     public string ModelName { get; set; } = "deepseek-v4-pro";
     public string EnspPath { get; set; } = @"C:\Program Files\Huawei\eNSP";
     public string ConfigOutputPath { get; set; } = string.Empty;
+    public string LastSeenVersion { get; set; } = string.Empty;
 
     public string ChatCompletionsUrl => $"{BaseUrl.TrimEnd('/')}/v1/chat/completions";
 
@@ -45,6 +46,8 @@ public class ApiConfig
                 EnspPath = v.GetString()!;
             if (root.TryGetProperty("ConfigOutputPath", out v) && v.ValueKind == JsonValueKind.String)
                 ConfigOutputPath = v.GetString()!;
+            if (root.TryGetProperty("LastSeenVersion", out v) && v.ValueKind == JsonValueKind.String)
+                LastSeenVersion = v.GetString()!;
         }
         catch
         {

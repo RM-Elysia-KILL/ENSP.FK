@@ -1,10 +1,11 @@
-﻿using ENSP.FK.Views.Pages;
-using ENSP.FK.Views.Windows;
+﻿using ENSP.ZD.Views.Pages;
+using ENSP.ZD.Views.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using System.Diagnostics;
 using Wpf.Ui;
 
-namespace ENSP.FK.Services
+namespace ENSP.ZD.Services
 {
     /// <summary>
     /// Managed host of the application.
@@ -13,46 +14,67 @@ namespace ENSP.FK.Services
     {
         private readonly IServiceProvider _serviceProvider;
 
-        private INavigationWindow _navigationWindow;
+        private readonly INavigationWindow _navigationWindow;
 
         public ApplicationHostService(IServiceProvider serviceProvider)
         {
+            var sw = Stopwatch.StartNew();
             _serviceProvider = serviceProvider;
+            try
+            {
+                _navigationWindow = (INavigationWindow)_serviceProvider.GetService(typeof(INavigationWindow))!;
+                Debug.WriteLine($"[STARTUP] MainWindow resolved OK, IsLoaded={_navigationWindow is MainWindow mw && mw.IsLoaded}");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[STARTUP] FAILED to resolve INavigationWindow: {ex}");
+                throw;
+            }
+            sw.Stop();
+            Debug.WriteLine($"[STARTUP] ApplicationHostService.ctor: {sw.ElapsedMilliseconds}ms");
         }
 
-        /// <summary>
-        /// Triggered when the application host is ready to start the service.
-        /// </summary>
-        /// <param name="cancellationToken">Indicates that the start process has been aborted.</param>
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            await HandleActivationAsync();
+            Debug.WriteLine("[STARTUP] ApplicationHostService.StartAsync called");
+            try
+            {
+                await HandleActivationAsync();
+                Debug.WriteLine("[STARTUP] ApplicationHostService.StartAsync completed");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[STARTUP] ApplicationHostService.StartAsync FAILED: {ex}");
+                throw;
+            }
         }
 
-        /// <summary>
-        /// Triggered when the application host is performing a graceful shutdown.
-        /// </summary>
-        /// <param name="cancellationToken">Indicates that the shutdown process should no longer be graceful.</param>
         public async Task StopAsync(CancellationToken cancellationToken)
         {
             await Task.CompletedTask;
         }
 
-        /// <summary>
-        /// Creates main window during activation.
-        /// </summary>
         private async Task HandleActivationAsync()
         {
-            if (!Application.Current.Windows.OfType<MainWindow>().Any())
-            {
-                _navigationWindow = (
-                    _serviceProvider.GetService(typeof(INavigationWindow)) as INavigationWindow
-                )!;
-                _navigationWindow!.ShowWindow();
+            var sw = Stopwatch.StartNew();
+            // .NET 10.0 WPF adds Window to Application.Current.Windows during construction,
+            // so we can't use Windows.OfType<T>().Any() to check if the window was shown.
+            // Instead, check the IsLoaded property directly.
+            var mw = _navigationWindow as MainWindow;
+            bool needsShow = mw == null || !mw.IsLoaded;
 
+#if DEBUG
+            Debug.WriteLine($"[STARTUP] HandleActivationAsync — IsLoaded={mw?.IsLoaded}, needsShow={needsShow}");
+#endif
+
+            if (needsShow)
+            {
+                _navigationWindow.ShowWindow();
                 _navigationWindow.Navigate(typeof(Views.Pages.DashboardPage));
             }
 
+            sw.Stop();
+            Debug.WriteLine($"[STARTUP] HandleActivationAsync total: {sw.ElapsedMilliseconds}ms");
             await Task.CompletedTask;
         }
     }

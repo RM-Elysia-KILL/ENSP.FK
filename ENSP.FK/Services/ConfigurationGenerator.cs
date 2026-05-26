@@ -1,8 +1,8 @@
-using ENSP.FK.Models.Configuration;
-using ENSP.FK.Models.Requirements;
-using ENSP.FK.Models.Topology;
+using ENSP.ZD.Models.Configuration;
+using ENSP.ZD.Models.Requirements;
+using ENSP.ZD.Models.Topology;
 
-namespace ENSP.FK.Services;
+namespace ENSP.ZD.Services;
 
 public class ConfigurationGenerator
 {
@@ -79,6 +79,7 @@ public class ConfigurationGenerator
             section.Commands.Add(new ConfigCommand { Command = $"interface {FormatInterfaceName(req.InterfaceName)}" });
             section.Commands.Add(new ConfigCommand { Command = $"ip address {req.IpAddress} {req.SubnetMask}", IndentLevel = 1 });
         }
+        section.Commands.Add(new ConfigCommand { Command = "quit" });
 
         config.Sections.Add(section);
     }
@@ -98,6 +99,7 @@ public class ConfigurationGenerator
             section.Commands.Add(new ConfigCommand { Command = $"interface {FormatInterfaceName(port)}" });
             section.Commands.Add(new ConfigCommand { Command = "port link-type access", IndentLevel = 1 });
             section.Commands.Add(new ConfigCommand { Command = $"port default vlan {vlan.VlanId}", IndentLevel = 1 });
+        section.Commands.Add(new ConfigCommand { Command = "quit" });
         }
 
         // Trunk ports
@@ -106,6 +108,7 @@ public class ConfigurationGenerator
             section.Commands.Add(new ConfigCommand { Command = $"interface {FormatInterfaceName(port)}" });
             section.Commands.Add(new ConfigCommand { Command = "port link-type trunk", IndentLevel = 1 });
             section.Commands.Add(new ConfigCommand { Command = $"port trunk allow-pass vlan {vlan.VlanId}", IndentLevel = 1 });
+        section.Commands.Add(new ConfigCommand { Command = "quit" });
         }
 
         config.Sections.Add(section);
@@ -137,6 +140,7 @@ public class ConfigurationGenerator
             }
         }
 
+        section.Commands.Add(new ConfigCommand { Command = "quit" });
         config.Sections.Add(section);
     }
 
@@ -189,6 +193,7 @@ public class ConfigurationGenerator
             section.Commands.Add(new ConfigCommand { Command = cmd, IndentLevel = 1 });
             seq += 5;
         }
+        section.Commands.Add(new ConfigCommand { Command = "quit" });
 
         config.Sections.Add(section);
     }
@@ -196,11 +201,32 @@ public class ConfigurationGenerator
     // Utility: format interface name (e.g., "GigabitEthernet0/0/1" or "GE0/0/1")
     private static string FormatInterfaceName(string name)
     {
-        if (name.StartsWith("GE", StringComparison.OrdinalIgnoreCase))
-            return "GigabitEthernet" + name[2..];
-        if (name.StartsWith("Eth", StringComparison.OrdinalIgnoreCase))
-            return "Ethernet" + name[3..];
-        return name;
+        return NormalizeIfName(name);
+    }
+
+    /// <summary>
+    /// Normalize interface name to full Huawei VRP form, handling all common abbreviations.
+    /// </summary>
+    public static string NormalizeIfName(string name)
+    {
+        var compact = System.Text.RegularExpressions.Regex.Replace(name.Trim(), @"\s+", "");
+
+        if (compact.StartsWith("GigabitEthernet", StringComparison.OrdinalIgnoreCase))
+            return "GigabitEthernet" + compact[15..];
+        if (compact.StartsWith("Ethernet", StringComparison.OrdinalIgnoreCase))
+            return "Ethernet" + compact[8..];
+        if (compact.StartsWith("GE", StringComparison.OrdinalIgnoreCase))
+            return "GigabitEthernet" + compact[2..];
+        if (compact.StartsWith("Eth", StringComparison.OrdinalIgnoreCase))
+            return "Ethernet" + compact[3..];
+        if (compact.StartsWith("g", StringComparison.OrdinalIgnoreCase)
+            && compact.Length > 1 && char.IsDigit(compact[1]))
+            return "GigabitEthernet" + compact[1..];
+        if (compact.StartsWith("e", StringComparison.OrdinalIgnoreCase)
+            && compact.Length > 1 && char.IsDigit(compact[1]))
+            return "Ethernet" + compact[1..];
+
+        return compact;
     }
 
     // Utility: format OSPF area (0 → 0.0.0.0, 1 → 0.0.0.1)

@@ -1,12 +1,12 @@
 <Page
-  x:Class="ENSP.FK.Views.Pages.ConfigOutputPage"
+  x:Class="ENSP.ZD.Views.Pages.ConfigOutputPage"
   xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-  xmlns:local="clr-namespace:ENSP.FK.Views.Pages"
+  xmlns:local="clr-namespace:ENSP.ZD.Views.Pages"
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-  xmlns:models="clr-namespace:ENSP.FK.Models"
-  xmlns:cfg="clr-namespace:ENSP.FK.Models.Configuration"
+  xmlns:models="clr-namespace:ENSP.ZD.Models"
+  xmlns:cfg="clr-namespace:ENSP.ZD.Models.Configuration"
   xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
   Title="配置输出"
   d:DataContext="{d:DesignInstance local:ConfigOutputPage, IsDesignTimeCreatable=False}"
@@ -19,7 +19,7 @@
 >
   <Page.Resources>
     <BooleanToVisibilityConverter x:Key="BoolToVis" />
-    <helpers:InverseBoolConverter x:Key="InverseBool" xmlns:helpers="clr-namespace:ENSP.FK.Helpers" />
+    <helpers:InverseBoolConverter x:Key="InverseBool" xmlns:helpers="clr-namespace:ENSP.ZD.Helpers" />
   </Page.Resources>
 
   <Grid Margin="24">

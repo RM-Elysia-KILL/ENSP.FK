@@ -1,8 +1,8 @@
-using ENSP.FK.Models.Configuration;
-using ENSP.FK.Models.Requirements;
-using ENSP.FK.Models.Topology;
+using ENSP.ZD.Models.Configuration;
+using ENSP.ZD.Models.Requirements;
+using ENSP.ZD.Models.Topology;
 
-namespace ENSP.FK.Services;
+namespace ENSP.ZD.Services;
 
 public class ProjectSession
 {

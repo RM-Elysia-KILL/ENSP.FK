@@ -1,10 +1,11 @@
-﻿using ENSP.FK.ViewModels.Windows;
+﻿using ENSP.ZD.ViewModels.Windows;
+using System.Diagnostics;
 using Wpf.Ui;
 using Wpf.Ui.Abstractions;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Controls;
 
-namespace ENSP.FK.Views.Windows
+namespace ENSP.ZD.Views.Windows
 {
     public partial class MainWindow : INavigationWindow
     {
@@ -16,15 +17,26 @@ namespace ENSP.FK.Views.Windows
             INavigationService navigationService
         )
         {
+            var swTotal = Stopwatch.StartNew();
+
             ViewModel = viewModel;
             DataContext = this;
 
             SystemThemeWatcher.Watch(this);
 
+            var sw = Stopwatch.StartNew();
             InitializeComponent();
-            SetPageService(navigationViewPageProvider);
+            sw.Stop();
+            Debug.WriteLine($"[STARTUP] MainWindow.InitializeComponent: {sw.ElapsedMilliseconds}ms");
 
+            sw.Restart();
+            SetPageService(navigationViewPageProvider);
             navigationService.SetNavigationControl(RootNavigation);
+            sw.Stop();
+            Debug.WriteLine($"[STARTUP] MainWindow.SetPageService + SetNavigationControl: {sw.ElapsedMilliseconds}ms");
+
+            swTotal.Stop();
+            Debug.WriteLine($"[STARTUP] MainWindow.ctor total: {swTotal.ElapsedMilliseconds}ms");
         }
 
         #region INavigationWindow methods

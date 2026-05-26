@@ -1,4 +1,4 @@
-﻿namespace ENSP.FK.ViewModels.Pages
+﻿namespace ENSP.ZD.ViewModels.Pages
 {
     public partial class DashboardViewModel : ObservableObject
     {

@@ -1,4 +1,4 @@
-namespace ENSP.FK.Models.Configuration;
+namespace ENSP.ZD.Models.Configuration;
 
 public class ConfigSection
 {

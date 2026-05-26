@@ -1,8 +1,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using ENSP.FK.Models;
-using ENSP.FK.Models.Configuration;
-using ENSP.FK.Services;
+using ENSP.ZD.Models;
+using ENSP.ZD.Models.Configuration;
+using ENSP.ZD.Services;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
@@ -10,7 +10,7 @@ using System.Windows;
 using System.Windows.Threading;
 using Wpf.Ui.Abstractions.Controls;
 
-namespace ENSP.FK.ViewModels.Pages;
+namespace ENSP.ZD.ViewModels.Pages;
 
 public partial class ConfigOutputViewModel : ObservableObject, INavigationAware
 {
@@ -243,7 +243,7 @@ public partial class ConfigOutputViewModel : ObservableObject, INavigationAware
 
         return Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "ENSP.FK", "配置输出");
+            "ENSP.ZD", "配置输出");
     }
 
     [RelayCommand]
