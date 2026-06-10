@@ -164,7 +164,7 @@ public partial class TopologyParser
             }
 
             // Assign slot numbers: last expansionCount blocks go to slots 1..N, rest on slot 0
-            int mainBoardBlocks = rawIfaces.Count - expansionCount;
+            int mainBoardBlocks = Math.Max(0, rawIfaces.Count - expansionCount);
             for (int idx = 0; idx < rawIfaces.Count; idx++)
             {
                 int slotNum = idx < mainBoardBlocks ? 0 : idx - mainBoardBlocks + 1;

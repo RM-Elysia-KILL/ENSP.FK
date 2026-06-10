@@ -48,6 +48,9 @@ namespace ENSP.ZD
                 // API Configuration
                 services.AddSingleton<Models.ApiConfig>();
 
+                // UI Scale
+                services.AddSingleton(UiScaleService.Instance);
+
                 // ENSP Services
                 services.AddSingleton<DeviceIconService>(sp =>
                 {
@@ -130,6 +133,10 @@ namespace ENSP.ZD
         private async void OnStartup(object sender, StartupEventArgs e)
         {
             var sw = Stopwatch.StartNew();
+
+            // Initialize UI scaling before window loads
+            UiScaleService.Instance.Recalculate();
+
             await _host.StartAsync();
             sw.Stop();
             Debug.WriteLine($"[STARTUP] Host.StartAsync → window visible: {sw.ElapsedMilliseconds}ms");

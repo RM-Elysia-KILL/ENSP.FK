@@ -22,7 +22,8 @@
     <helpers:InverseBoolConverter x:Key="InverseBool" />
   </Page.Resources>
 
-  <Grid Margin="16">
+  <Viewbox Stretch="Uniform" StretchDirection="UpOnly">
+    <Grid Margin="16" Width="800">
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
       <RowDefinition Height="*" />
@@ -38,8 +39,8 @@
     >
       <StackPanel Orientation="Horizontal">
         <ui:SymbolIcon
-          Width="24"
-          Height="24"
+          Width="{helpers:Scale 24}"
+          Height="{helpers:Scale 24}"
           VerticalAlignment="Center"
           Symbol="Flowchart24"
         />
@@ -169,26 +170,26 @@
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
               <DataTemplate DataType="vm:TopologyNode">
-                <Canvas Width="80" Height="84" Cursor="Hand"
+                <Canvas Width="{helpers:Scale 80}" Height="{helpers:Scale 84}" Cursor="Hand"
                         ToolTip="{Binding InterfacesText}">
                   <!-- Device icon from eNSP installation -->
-                  <Image Width="64" Height="48"
+                  <Image Width="{helpers:Scale 64}" Height="{helpers:Scale 48}"
                          Source="{Binding IconPath}"
                          Stretch="Uniform"
                          Canvas.Left="8" Canvas.Top="0" />
                   <!-- Status indicator dot -->
-                  <Ellipse Width="10" Height="10"
+                  <Ellipse Width="{helpers:Scale 10}" Height="{helpers:Scale 10}"
                            Fill="{Binding StatusIndicatorColor}"
                            Canvas.Left="35" Canvas.Top="44" />
                   <!-- Device name -->
-                  <TextBlock Canvas.Left="0" Canvas.Top="56" Width="80"
+                  <TextBlock Canvas.Left="0" Canvas.Top="56" Width="{helpers:Scale 80}"
                              FontSize="10"
                              Foreground="#1A1A1A"
                              HorizontalAlignment="Center" TextAlignment="Center"
                              TextTrimming="CharacterEllipsis"
                              Text="{Binding DeviceName}" />
                   <!-- Port info -->
-                  <TextBlock Canvas.Left="0" Canvas.Top="70" Width="80"
+                  <TextBlock Canvas.Left="0" Canvas.Top="70" Width="{helpers:Scale 80}"
                              FontSize="8"
                              Foreground="#888888"
                              HorizontalAlignment="Center" TextAlignment="Center"
@@ -207,5 +208,6 @@
         </Canvas>
       </Grid>
     </Border>
-  </Grid>
+    </Grid>
+  </Viewbox>
 </Page>

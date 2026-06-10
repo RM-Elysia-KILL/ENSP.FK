@@ -5,6 +5,7 @@
   xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
   xmlns:local="clr-namespace:ENSP.ZD.Views.Pages"
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+		xmlns:helpers="clr-namespace:ENSP.ZD.Helpers"
   xmlns:models="clr-namespace:ENSP.ZD.Models"
   xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
   Title="DataPage"
@@ -18,7 +19,8 @@
   ScrollViewer.CanContentScroll="False"
   mc:Ignorable="d"
 >
-  <Grid>
+  <Viewbox Stretch="Uniform" StretchDirection="UpOnly">
+    <Grid Width="800">
     <ui:VirtualizingItemsControl
       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
       ItemsSource="{Binding ViewModel.Colors, Mode=OneWay}"
@@ -27,8 +29,8 @@
       <ItemsControl.ItemTemplate>
         <DataTemplate DataType="{x:Type models:DataColor}">
           <ui:Button
-            Width="80"
-            Height="80"
+            Width="{helpers:Scale 80}"
+            Height="{helpers:Scale 80}"
             Margin="2"
             Padding="0"
             HorizontalAlignment="Stretch"
@@ -41,5 +43,6 @@
         </DataTemplate>
       </ItemsControl.ItemTemplate>
     </ui:VirtualizingItemsControl>
-  </Grid>
+    </Grid>
+  </Viewbox>
 </Page>

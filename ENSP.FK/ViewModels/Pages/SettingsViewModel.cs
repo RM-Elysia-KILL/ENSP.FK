@@ -168,6 +168,7 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
         _apiConfig.BaseUrl = BaseUrl;
         _apiConfig.ApiKey = ApiKey;
         _apiConfig.ModelName = ModelName;
+        _apiConfig.Save();
 
         IsTesting = true;
         ApiStatus = "正在测试连接...";

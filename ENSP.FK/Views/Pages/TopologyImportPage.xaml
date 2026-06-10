@@ -5,6 +5,7 @@
   xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
   xmlns:local="clr-namespace:ENSP.ZD.Views.Pages"
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+		xmlns:helpers="clr-namespace:ENSP.ZD.Helpers"
   xmlns:topology="clr-namespace:ENSP.ZD.Models.Topology"
   xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
   Title="拓扑导入"
@@ -20,7 +21,8 @@
     <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter" />
   </Page.Resources>
 
-  <Grid Margin="24">
+  <Viewbox Stretch="Uniform" StretchDirection="UpOnly">
+    <Grid Margin="24" Width="800">
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
@@ -38,7 +40,7 @@
 
     <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,12">
       <TextBox
-        Width="400"
+        Width="{helpers:Scale 400}"
         VerticalAlignment="Center"
         IsReadOnly="True"
         Text="{Binding ViewModel.FilePath, Mode=OneWay}"
@@ -80,8 +82,8 @@
               >
                 <Grid>
                   <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="160" />
-                    <ColumnDefinition Width="100" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                   </Grid.ColumnDefinitions>
                   <TextBlock
@@ -137,5 +139,6 @@
         </ui:VirtualizingItemsControl>
       </GroupBox>
     </Grid>
-  </Grid>
+    </Grid>
+  </Viewbox>
 </Page>

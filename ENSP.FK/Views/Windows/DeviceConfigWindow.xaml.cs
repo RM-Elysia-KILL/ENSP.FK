@@ -12,6 +12,10 @@ public partial class DeviceConfigWindow : FluentWindow
         _vm = viewModel;
         DataContext = viewModel;
         InitializeComponent();
+
+        var wa = System.Windows.SystemParameters.WorkArea;
+        Width = Math.Max(MinWidth, wa.Width * 0.50);
+        Height = Math.Max(MinHeight, wa.Height * 0.65);
     }
 
     private void ConfigTree_SelectedItemChanged(object sender, System.Windows.RoutedPropertyChangedEventArgs<object> e)

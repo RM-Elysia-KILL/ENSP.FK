@@ -22,10 +22,11 @@
     <helpers:StringEqualsConverter x:Key="StringEqualsConverter" />
   </Page.Resources>
 
-  <Grid Margin="24">
+  <Viewbox Stretch="Uniform" StretchDirection="UpOnly">
+    <Grid Margin="24" Width="800">
     <Grid.ColumnDefinitions>
-      <ColumnDefinition Width="220" />
-      <ColumnDefinition Width="*" />
+      <ColumnDefinition Width="*" MinWidth="180" MaxWidth="350" />
+      <ColumnDefinition Width="3*" />
     </Grid.ColumnDefinitions>
 
     <GroupBox Grid.Column="0" Header="设备">
@@ -86,7 +87,7 @@
           Text="结构化需求（可选）:"
         />
         <ComboBox
-          Width="160"
+          Width="{helpers:Scale 160}"
           VerticalAlignment="Center"
           ItemsSource="{Binding ViewModel.RequirementTypes, Mode=OneWay}"
           SelectedItem="{Binding ViewModel.SelectedRequirementType, Mode=TwoWay}"
@@ -105,7 +106,7 @@
         <StackPanel>
 
           <GroupBox
-            Height="160"
+            Height="{helpers:Scale 160}"
             Header="接口 IP 配置"
             Visibility="{Binding ViewModel.SelectedRequirementType, Mode=OneWay, Converter={StaticResource StringEqualsConverter}, ConverterParameter='接口 IP'}"
           >
@@ -120,7 +121,7 @@
           </GroupBox>
 
           <GroupBox
-            Height="220"
+            Height="{helpers:Scale 220}"
             Header="VLAN 配置"
             Visibility="{Binding ViewModel.SelectedRequirementType, Mode=OneWay, Converter={StaticResource StringEqualsConverter}, ConverterParameter='VLAN'}"
           >
@@ -137,7 +138,7 @@
           </GroupBox>
 
           <GroupBox
-            Height="240"
+            Height="{helpers:Scale 240}"
             Header="OSPF 配置"
             Visibility="{Binding ViewModel.SelectedRequirementType, Mode=OneWay, Converter={StaticResource StringEqualsConverter}, ConverterParameter='OSPF'}"
           >
@@ -154,7 +155,7 @@
           </GroupBox>
 
           <GroupBox
-            Height="220"
+            Height="{helpers:Scale 220}"
             Header="静态路由配置"
             Visibility="{Binding ViewModel.SelectedRequirementType, Mode=OneWay, Converter={StaticResource StringEqualsConverter}, ConverterParameter='静态路由'}"
           >
@@ -171,7 +172,7 @@
           </GroupBox>
 
           <GroupBox
-            Height="220"
+            Height="{helpers:Scale 220}"
             Header="ACL 规则"
             Visibility="{Binding ViewModel.SelectedRequirementType, Mode=OneWay, Converter={StaticResource StringEqualsConverter}, ConverterParameter='ACL'}"
           >
@@ -212,7 +213,7 @@
               >
                 <StackPanel Orientation="Horizontal">
                   <TextBlock
-                    Width="100"
+                    Width="{helpers:Scale 100}"
                     VerticalAlignment="Center"
                     FontWeight="SemiBold"
                     Text="{Binding DeviceName, Mode=OneWay}"
@@ -224,7 +225,7 @@
                   />
                   <ui:Button
                     Margin="8,0,0,0"
-                    Width="22" Height="22"
+                    Width="{helpers:Scale 22}" Height="{helpers:Scale 22}"
                     VerticalAlignment="Center"
                     Appearance="Danger"
                     Icon="Delete12"
@@ -238,5 +239,6 @@
         </ui:VirtualizingItemsControl>
       </GroupBox>
     </Grid>
-  </Grid>
+    </Grid>
+  </Viewbox>
 </Page>

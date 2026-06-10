@@ -23,7 +23,8 @@
     <helpers:InverseBoolConverter x:Key="InverseBool" />
   </Page.Resources>
 
-  <Grid Margin="24">
+  <Viewbox Stretch="Uniform" StretchDirection="UpOnly">
+    <Grid Margin="24" Width="800">
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
@@ -71,8 +72,8 @@
 
                 <ui:SymbolIcon
                   Grid.Column="0"
-                  Width="32"
-                  Height="32"
+                  Width="{helpers:Scale 32}"
+                  Height="{helpers:Scale 32}"
                   Margin="0,0,16,0"
                   VerticalAlignment="Center"
                   Symbol="{Binding Installed, Converter={StaticResource StatusToSymbol}}"
@@ -137,7 +138,7 @@
         </Grid>
         <TextBox
           Margin="0,8,0,0"
-          Height="200"
+          Height="{helpers:Scale 200}"
           IsReadOnly="True"
           VerticalScrollBarVisibility="Auto"
           FontFamily="Consolas"
@@ -147,5 +148,6 @@
         />
       </StackPanel>
     </Border>
-  </Grid>
+    </Grid>
+  </Viewbox>
 </Page>

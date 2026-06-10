@@ -12,5 +12,9 @@ public partial class ChangelogWindow : FluentWindow
         ViewModel = viewModel;
         DataContext = this;
         InitializeComponent();
+
+        var wa = System.Windows.SystemParameters.WorkArea;
+        Width = Math.Max(MinWidth, wa.Width * 0.35);
+        Height = Math.Max(MinHeight, wa.Height * 0.55);
     }
 }

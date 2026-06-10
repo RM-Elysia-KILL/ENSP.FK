@@ -4,11 +4,12 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:helpers="clr-namespace:ENSP.ZD.Helpers"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:vm="clr-namespace:ENSP.ZD.ViewModels.Windows"
     xmlns:cfg="clr-namespace:ENSP.ZD.Models.Configuration"
     Title="{Binding WindowTitle}"
-    Width="680" Height="650"
+    Width="{helpers:Scale 680}" Height="{helpers:Scale 650}"
     MinWidth="550" MinHeight="500"
     ResizeMode="CanResize"
     WindowStartupLocation="CenterScreen"
@@ -18,7 +19,7 @@
 
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
-        <helpers:InverseBoolConverter x:Key="InverseBool" xmlns:helpers="clr-namespace:ENSP.ZD.Helpers"/>
+        <helpers:InverseBoolConverter x:Key="InverseBool"/>
     </Window.Resources>
 
     <Grid>
@@ -44,9 +45,9 @@
             <TabItem Header="配置编辑">
                 <Grid Margin="0,4">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="130"/>
+                        <ColumnDefinition Width="*" MinWidth="120" MaxWidth="220"/>
                         <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="3*"/>
                     </Grid.ColumnDefinitions>
 
                     <!-- Left: Config tree -->
@@ -78,7 +79,7 @@
                         </Grid>
                     </Border>
 
-                    <Separator Grid.Column="1" Width="1" Background="{DynamicResource ControlElevationBorderBrush}" Margin="4,6"/>
+                    <Separator Grid.Column="1" Width="{helpers:Scale 1}" Background="{DynamicResource ControlElevationBorderBrush}" Margin="4,6"/>
 
                     <!-- Right: Structured form panels -->
                     <Grid Grid.Column="2">
@@ -97,7 +98,7 @@
                             <TextBlock Grid.Column="0" Text="{Binding ConfigStatus}" FontSize="9"
                                        Foreground="Gray" VerticalAlignment="Center" Margin="4,0,0,0"/>
                             <Button Grid.Column="1" Content="获取配置" Command="{Binding FetchConfigCommand}"
-                                    Width="72" Height="22" FontSize="10" Margin="0,0,2,0"/>
+                                    Width="{helpers:Scale 72}" Height="{helpers:Scale 22}" FontSize="10" Margin="0,0,2,0"/>
                         </Grid>
 
                         <!-- Content panels -->
@@ -119,7 +120,7 @@
                                     </StackPanel>
                                 </Border>
                                 <Button Content="保存" Command="{Binding SendGlobalConfigCommand}"
-                                        Width="80" Height="26" FontSize="11" HorizontalAlignment="Right" Margin="0,0,0,6"/>
+                                        Width="{helpers:Scale 80}" Height="{helpers:Scale 26}" FontSize="11" HorizontalAlignment="Right" Margin="0,0,0,6"/>
                             </StackPanel>
 
                             <!-- ══ STATIC ROUTE ══ -->
@@ -148,7 +149,7 @@
                                                 <TextBox Text="{Binding StaticRouteNextHop, UpdateSourceTrigger=PropertyChanged}" FontSize="11" Padding="4,2" FontFamily="Consolas"/>
                                             </StackPanel>
                                             <Button Grid.Column="3" Content="+ 添加" Command="{Binding AddStaticRouteCommand}"
-                                                    VerticalAlignment="Bottom" Width="56" Height="24" FontSize="10"/>
+                                                    VerticalAlignment="Bottom" Width="{helpers:Scale 56}" Height="{helpers:Scale 24}" FontSize="10"/>
                                         </Grid>
                                     </StackPanel>
                                 </Border>
@@ -161,8 +162,8 @@
                                         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
                                         <Grid Grid.Row="0" Margin="0,0,0,2">
                                             <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="24"/><ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="50"/>
+                                                <ColumnDefinition Width="{helpers:Scale 24}"/><ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="{helpers:Scale 50}"/>
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Grid.Column="0" Text="#" FontSize="10" Foreground="Gray"/>
                                             <TextBlock Grid.Column="1" Text="目标网络" FontSize="10" Foreground="Gray"/>
@@ -175,15 +176,15 @@
                                                 <DataTemplate DataType="{x:Type cfg:StaticRouteEntry}">
                                                     <Grid Margin="0,1,0,0">
                                                         <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="24"/><ColumnDefinition Width="*"/>
-                                                            <ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="50"/>
+                                                            <ColumnDefinition Width="{helpers:Scale 24}"/><ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="{helpers:Scale 50}"/>
                                                         </Grid.ColumnDefinitions>
                                                         <TextBlock Grid.Column="0" FontSize="10" Foreground="Gray"
                                                                    Text="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource TemplatedParent}}"/>
                                                         <TextBlock Grid.Column="1" Text="{Binding Dest}" FontSize="11" FontFamily="Consolas" Margin="2,0"/>
                                                         <TextBlock Grid.Column="2" Text="{Binding Mask}" FontSize="11" FontFamily="Consolas" Margin="2,0"/>
                                                         <TextBlock Grid.Column="3" Text="{Binding NextHop}" FontSize="11" FontFamily="Consolas" Margin="2,0"/>
-                                                        <Button Grid.Column="4" Content="x" FontSize="9" Width="18" Height="18"
+                                                        <Button Grid.Column="4" Content="x" FontSize="9" Width="{helpers:Scale 18}" Height="{helpers:Scale 18}"
                                                                 Command="{Binding DataContext.DeleteStaticRouteCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                                 CommandParameter="{Binding}" ToolTip="删除"/>
                                                     </Grid>
@@ -205,7 +206,7 @@
                                     </StackPanel>
                                 </Border>
                                 <Button Content="发送" Command="{Binding SendStaticRouteConfigCommand}"
-                                        Width="80" Height="26" FontSize="11" HorizontalAlignment="Right" Margin="0,0,0,6"/>
+                                        Width="{helpers:Scale 80}" Height="{helpers:Scale 26}" FontSize="11" HorizontalAlignment="Right" Margin="0,0,0,6"/>
                             </StackPanel>
 
                             <!-- ══ RIP ══ -->
@@ -216,7 +217,7 @@
                                         <TextBlock Text="RIP 配置" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,6"/>
                                         <Grid>
                                             <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="80"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="{helpers:Scale 80}"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Text="版本" FontSize="10" Foreground="Gray" VerticalAlignment="Center"/>
                                             <ComboBox Grid.Column="1" Text="{Binding RipVersion, UpdateSourceTrigger=PropertyChanged}"
@@ -229,7 +230,7 @@
                                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                             <TextBox Text="{Binding RipNetwork, UpdateSourceTrigger=PropertyChanged}" FontSize="11" Padding="4,2" FontFamily="Consolas"/>
                                             <Button Grid.Column="1" Content="+ 添加" Command="{Binding AddRipNetworkCommand}"
-                                                    Width="56" Height="24" FontSize="10" Margin="6,0,0,0"/>
+                                                    Width="{helpers:Scale 56}" Height="{helpers:Scale 24}" FontSize="10" Margin="6,0,0,0"/>
                                         </Grid>
                                     </StackPanel>
                                 </Border>
@@ -242,9 +243,9 @@
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate DataType="{x:Type cfg:RipNetworkEntry}">
                                                 <Grid Margin="0,1">
-                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="50"/></Grid.ColumnDefinitions>
+                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="{helpers:Scale 50}"/></Grid.ColumnDefinitions>
                                                     <TextBlock Text="{Binding Network}" FontSize="11" FontFamily="Consolas" VerticalAlignment="Center"/>
-                                                    <Button Grid.Column="1" Content="x" FontSize="9" Width="18" Height="18"
+                                                    <Button Grid.Column="1" Content="x" FontSize="9" Width="{helpers:Scale 18}" Height="{helpers:Scale 18}"
                                                             Command="{Binding DataContext.DeleteRipNetworkCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                             CommandParameter="{Binding}"/>
                                                 </Grid>
@@ -265,7 +266,7 @@
                                     </StackPanel>
                                 </Border>
                                 <Button Content="发送" Command="{Binding SendRipConfigCommand}"
-                                        Width="80" Height="26" FontSize="11" HorizontalAlignment="Right" Margin="0,0,0,6"/>
+                                        Width="{helpers:Scale 80}" Height="{helpers:Scale 26}" FontSize="11" HorizontalAlignment="Right" Margin="0,0,0,6"/>
                             </StackPanel>
 
                             <!-- ══ OSPF ══ -->
@@ -286,13 +287,13 @@
                                             </StackPanel>
                                         </Grid>
                                         <TextBlock Text="区域 ID" FontSize="10" Foreground="Gray" Margin="0,4,0,1"/>
-                                        <TextBox Text="{Binding OspfArea, UpdateSourceTrigger=PropertyChanged}" FontSize="11" Padding="4,2" FontFamily="Consolas" Width="100"/>
+                                        <TextBox Text="{Binding OspfArea, UpdateSourceTrigger=PropertyChanged}" FontSize="11" Padding="4,2" FontFamily="Consolas" Width="{helpers:Scale 100}"/>
                                         <TextBlock Text="宣告网络" FontSize="10" Foreground="Gray" Margin="0,6,0,1"/>
                                         <Grid>
                                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                             <TextBox Text="{Binding OspfNetwork, UpdateSourceTrigger=PropertyChanged}" FontSize="11" Padding="4,2" FontFamily="Consolas"/>
                                             <Button Grid.Column="1" Content="+ 添加" Command="{Binding AddOspfNetworkCommand}"
-                                                    Width="56" Height="24" FontSize="10" Margin="6,0,0,0"/>
+                                                    Width="{helpers:Scale 56}" Height="{helpers:Scale 24}" FontSize="10" Margin="6,0,0,0"/>
                                         </Grid>
                                     </StackPanel>
                                 </Border>
@@ -305,10 +306,10 @@
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate DataType="{x:Type cfg:OspfNetworkEntry}">
                                                 <Grid Margin="0,1">
-                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="60"/><ColumnDefinition Width="50"/></Grid.ColumnDefinitions>
+                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="{helpers:Scale 60}"/><ColumnDefinition Width="{helpers:Scale 50}"/></Grid.ColumnDefinitions>
                                                     <TextBlock Text="{Binding Network}" FontSize="11" FontFamily="Consolas" VerticalAlignment="Center"/>
                                                     <TextBlock Grid.Column="1" Text="{Binding Area, StringFormat='area {0}'}" FontSize="10" Foreground="Gray" VerticalAlignment="Center"/>
-                                                    <Button Grid.Column="2" Content="x" FontSize="9" Width="18" Height="18"
+                                                    <Button Grid.Column="2" Content="x" FontSize="9" Width="{helpers:Scale 18}" Height="{helpers:Scale 18}"
                                                             Command="{Binding DataContext.DeleteOspfNetworkCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                             CommandParameter="{Binding}"/>
                                                 </Grid>
@@ -329,7 +330,7 @@
                                     </StackPanel>
                                 </Border>
                                 <Button Content="发送" Command="{Binding SendOspfConfigCommand}"
-                                        Width="80" Height="26" FontSize="11" HorizontalAlignment="Right" Margin="0,0,0,6"/>
+                                        Width="{helpers:Scale 80}" Height="{helpers:Scale 26}" FontSize="11" HorizontalAlignment="Right" Margin="0,0,0,6"/>
                             </StackPanel>
 
                             <!-- ══ BGP ══ -->
@@ -354,14 +355,14 @@
                                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                             <TextBox Text="{Binding BgpNetwork, UpdateSourceTrigger=PropertyChanged}" FontSize="11" Padding="4,2" FontFamily="Consolas"/>
                                             <Button Grid.Column="1" Content="+ 添加" Command="{Binding AddBgpNetworkCommand}"
-                                                    Width="56" Height="24" FontSize="10" Margin="6,0,0,0"/>
+                                                    Width="{helpers:Scale 56}" Height="{helpers:Scale 24}" FontSize="10" Margin="6,0,0,0"/>
                                         </Grid>
                                         <TextBlock Text="Peer IP" FontSize="10" Foreground="Gray" Margin="0,6,0,1"/>
                                         <Grid>
                                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                             <TextBox Text="{Binding BgpPeerIp, UpdateSourceTrigger=PropertyChanged}" FontSize="11" Padding="4,2" FontFamily="Consolas"/>
                                             <Button Grid.Column="1" Content="+ 添加" Command="{Binding AddBgpPeerCommand}"
-                                                    Width="56" Height="24" FontSize="10" Margin="6,0,0,0"/>
+                                                    Width="{helpers:Scale 56}" Height="{helpers:Scale 24}" FontSize="10" Margin="6,0,0,0"/>
                                         </Grid>
                                     </StackPanel>
                                 </Border>
@@ -373,9 +374,9 @@
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate DataType="{x:Type cfg:BgpNetworkEntry}">
                                                 <Grid Margin="0,1">
-                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="50"/></Grid.ColumnDefinitions>
+                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="{helpers:Scale 50}"/></Grid.ColumnDefinitions>
                                                     <TextBlock Text="{Binding Network}" FontSize="11" FontFamily="Consolas" VerticalAlignment="Center"/>
-                                                    <Button Grid.Column="1" Content="x" FontSize="9" Width="18" Height="18"
+                                                    <Button Grid.Column="1" Content="x" FontSize="9" Width="{helpers:Scale 18}" Height="{helpers:Scale 18}"
                                                             Command="{Binding DataContext.DeleteBgpNetworkCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                             CommandParameter="{Binding}"/>
                                                 </Grid>
@@ -396,7 +397,7 @@
                                     </StackPanel>
                                 </Border>
                                 <Button Content="发送" Command="{Binding SendBgpConfigCommand}"
-                                        Width="80" Height="26" FontSize="11" HorizontalAlignment="Right" Margin="0,0,0,6"/>
+                                        Width="{helpers:Scale 80}" Height="{helpers:Scale 26}" FontSize="11" HorizontalAlignment="Right" Margin="0,0,0,6"/>
                             </StackPanel>
 
                             <!-- ══ IS-IS ══ -->
@@ -408,7 +409,7 @@
                                         <TextBlock Text="System ID / NET" FontSize="10" Foreground="Gray"/>
                                         <TextBox Text="{Binding IsisSystemId, UpdateSourceTrigger=PropertyChanged}" FontSize="11" Padding="4,2" FontFamily="Consolas"/>
                                         <TextBlock Text="级别" FontSize="10" Foreground="Gray" Margin="0,4,0,1"/>
-                                        <ComboBox Text="{Binding IsisLevel, UpdateSourceTrigger=PropertyChanged}" FontSize="11" Width="120" IsEditable="True">
+                                        <ComboBox Text="{Binding IsisLevel, UpdateSourceTrigger=PropertyChanged}" FontSize="11" Width="{helpers:Scale 120}" IsEditable="True">
                                             <ComboBoxItem Content="level-1"/><ComboBoxItem Content="level-1-2"/><ComboBoxItem Content="level-2"/>
                                         </ComboBox>
                                         <TextBlock Text="NET 地址" FontSize="10" Foreground="Gray" Margin="0,6,0,1"/>
@@ -416,7 +417,7 @@
                                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                             <TextBox Text="{Binding IsisNetwork, UpdateSourceTrigger=PropertyChanged}" FontSize="11" Padding="4,2" FontFamily="Consolas"/>
                                             <Button Grid.Column="1" Content="+ 添加" Command="{Binding AddIsisNetworkCommand}"
-                                                    Width="56" Height="24" FontSize="10" Margin="6,0,0,0"/>
+                                                    Width="{helpers:Scale 56}" Height="{helpers:Scale 24}" FontSize="10" Margin="6,0,0,0"/>
                                         </Grid>
                                     </StackPanel>
                                 </Border>
@@ -431,7 +432,7 @@
                                     </StackPanel>
                                 </Border>
                                 <Button Content="发送" Command="{Binding SendIsisConfigCommand}"
-                                        Width="80" Height="26" FontSize="11" HorizontalAlignment="Right" Margin="0,0,0,6"/>
+                                        Width="{helpers:Scale 80}" Height="{helpers:Scale 26}" FontSize="11" HorizontalAlignment="Right" Margin="0,0,0,6"/>
                             </StackPanel>
 
                             <!-- ══ VLAN ══ -->
@@ -451,7 +452,7 @@
                                                 <TextBox Text="{Binding VlanName, UpdateSourceTrigger=PropertyChanged}" FontSize="11" Padding="4,2" FontFamily="Consolas"/>
                                             </StackPanel>
                                             <Button Grid.Column="2" Content="+ 添加" Command="{Binding AddVlanCommand}"
-                                                    Width="56" Height="24" FontSize="10" Margin="6,0,0,0" VerticalAlignment="Bottom"/>
+                                                    Width="{helpers:Scale 56}" Height="{helpers:Scale 24}" FontSize="10" Margin="6,0,0,0" VerticalAlignment="Bottom"/>
                                         </Grid>
                                     </StackPanel>
                                 </Border>
@@ -464,12 +465,12 @@
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate DataType="{x:Type cfg:VlanEntry}">
                                                 <Grid Margin="0,1">
-                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="60"/><ColumnDefinition Width="*"/><ColumnDefinition Width="50"/></Grid.ColumnDefinitions>
+                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="{helpers:Scale 60}"/><ColumnDefinition Width="*"/><ColumnDefinition Width="{helpers:Scale 50}"/></Grid.ColumnDefinitions>
                                                     <TextBlock FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center">
                                                         <Run Text="VLAN "/><Run Text="{Binding VlanId}"/>
                                                     </TextBlock>
                                                     <TextBlock Grid.Column="1" Text="{Binding Name}" FontSize="11" VerticalAlignment="Center" Margin="4,0"/>
-                                                    <Button Grid.Column="2" Content="x" FontSize="9" Width="18" Height="18"
+                                                    <Button Grid.Column="2" Content="x" FontSize="9" Width="{helpers:Scale 18}" Height="{helpers:Scale 18}"
                                                             Command="{Binding DataContext.DeleteVlanCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                             CommandParameter="{Binding}"/>
                                                 </Grid>
@@ -490,7 +491,7 @@
                                     </StackPanel>
                                 </Border>
                                 <Button Content="发送" Command="{Binding SendVlanConfigCommand}"
-                                        Width="80" Height="26" FontSize="11" HorizontalAlignment="Right" Margin="0,0,0,6"/>
+                                        Width="{helpers:Scale 80}" Height="{helpers:Scale 26}" FontSize="11" HorizontalAlignment="Right" Margin="0,0,0,6"/>
                             </StackPanel>
 
                             </StackPanel>
@@ -510,7 +511,7 @@
 
                     <!-- Connection controls -->
                     <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,6">
-                        <Ellipse Width="10" Height="10" Margin="0,0,6,0">
+                        <Ellipse Width="{helpers:Scale 10}" Height="{helpers:Scale 10}" Margin="0,0,6,0">
                             <Ellipse.Style>
                                 <Style TargetType="Ellipse">
                                     <Style.Triggers>
@@ -524,9 +525,9 @@
                                 </Style>
                             </Ellipse.Style>
                         </Ellipse>
-                        <Button Content="连接" Command="{Binding ConnectCliCommand}" Width="56" Height="24" FontSize="11"
+                        <Button Content="连接" Command="{Binding ConnectCliCommand}" Width="{helpers:Scale 56}" Height="{helpers:Scale 24}" FontSize="11"
                                 Visibility="{Binding IsCliConnected, Converter={StaticResource InverseBool}}"/>
-                        <Button Content="断开" Command="{Binding DisconnectCliCommand}" Width="56" Height="24" FontSize="11"
+                        <Button Content="断开" Command="{Binding DisconnectCliCommand}" Width="{helpers:Scale 56}" Height="{helpers:Scale 24}" FontSize="11"
                                 Visibility="{Binding IsCliConnected, Converter={StaticResource BoolToVis}}"/>
                         <TextBlock Text="{Binding CliStatus}" FontSize="11" Foreground="Gray"
                                    VerticalAlignment="Center" Margin="8,0,0,0"/>
@@ -558,7 +559,7 @@
                                 </TextBox.InputBindings>
                             </TextBox>
                             <Button Grid.Column="2" Content="发送" Command="{Binding SendCliCommandCommand}"
-                                    Width="48" Height="24" FontSize="11"
+                                    Width="{helpers:Scale 48}" Height="{helpers:Scale 24}" FontSize="11"
                                     IsEnabled="{Binding IsCliConnected}"/>
                         </Grid>
                     </Border>
@@ -577,7 +578,7 @@
 
                     <TextBlock Grid.Row="0" Text="需求描述" FontWeight="SemiBold" Margin="0,0,0,4"/>
                     <TextBox Grid.Row="1" Text="{Binding AiPrompt, UpdateSourceTrigger=PropertyChanged}"
-                             Height="80" AcceptsReturn="True" TextWrapping="Wrap"
+                             Height="{helpers:Scale 80}" AcceptsReturn="True" TextWrapping="Wrap"
                              VerticalScrollBarVisibility="Auto" FontSize="12" Padding="6"
                              Background="{DynamicResource ApplicationBackgroundBrush}"/>
 
@@ -586,7 +587,7 @@
                             <ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <ui:Button Content="生成配置" Command="{Binding GenerateAiConfigCommand}"
-                                Width="90" Height="28" FontSize="12" Appearance="Primary"
+                                Width="{helpers:Scale 90}" Height="{helpers:Scale 28}" FontSize="12" Appearance="Primary"
                                 IsEnabled="{Binding IsAiGenerating, Converter={StaticResource InverseBool}}"/>
                         <TextBlock Grid.Column="1" Text="{Binding AiStatus}" FontSize="11"
                                    Foreground="Gray" VerticalAlignment="Center" Margin="8,0,0,0"/>
@@ -605,7 +606,7 @@
                     </Border>
 
                     <ui:Button Grid.Row="3" Content="应用到设备" Command="{Binding ApplyAiConfigCommand}"
-                            Width="100" Height="28" FontSize="12" Appearance="Success"
+                            Width="{helpers:Scale 100}" Height="{helpers:Scale 28}" FontSize="12" Appearance="Success"
                             Margin="0,8,0,0" HorizontalAlignment="Right"/>
                 </Grid>
             </TabItem>

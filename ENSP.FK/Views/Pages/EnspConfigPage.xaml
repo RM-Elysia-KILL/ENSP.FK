@@ -5,6 +5,7 @@
   xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
   xmlns:local="clr-namespace:ENSP.ZD.Views.Pages"
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+		xmlns:helpers="clr-namespace:ENSP.ZD.Helpers"
   xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
   Title="ENSP RUN"
   d:DataContext="{d:DesignInstance local:EnspConfigPage, IsDesignTimeCreatable=False}"
@@ -15,11 +16,12 @@
   Foreground="{DynamicResource TextFillColorPrimaryBrush}"
   mc:Ignorable="d"
 >
-  <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+  <Viewbox Stretch="Uniform" StretchDirection="UpOnly">
+    <Grid Width="800" VerticalAlignment="Center" HorizontalAlignment="Center">
     <StackPanel>
       <ui:SymbolIcon
-        Width="64"
-        Height="64"
+        Width="{helpers:Scale 64}"
+        Height="{helpers:Scale 64}"
         Symbol="PlayCircle24"
         Foreground="{DynamicResource AccentFillColorDefaultBrush}"
         HorizontalAlignment="Center"
@@ -43,7 +45,7 @@
 
       <ui:Button
         Margin="0,24,0,0"
-        Width="200"
+        Width="{helpers:Scale 200}"
         HorizontalAlignment="Center"
         Appearance="Primary"
         Command="{Binding ViewModel.LaunchEnspCommand, Mode=OneWay}"
@@ -60,5 +62,6 @@
         Text="{Binding ViewModel.Status, Mode=OneWay}"
       />
     </StackPanel>
-  </Grid>
+    </Grid>
+  </Viewbox>
 </Page>

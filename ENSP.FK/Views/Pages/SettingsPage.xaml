@@ -21,7 +21,8 @@
     <helpers:InverseBoolConverter x:Key="InverseBool" />
   </Page.Resources>
 
-  <ScrollViewer VerticalScrollBarVisibility="Auto">
+  <Viewbox Stretch="Uniform" StretchDirection="UpOnly">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Width="800">
     <StackPanel Margin="24">
       <!-- Theme -->
       <TextBlock FontSize="20" FontWeight="Medium" Text="个性化" />
@@ -145,5 +146,6 @@
         />
       </Button>
     </StackPanel>
-  </ScrollViewer>
+    </ScrollViewer>
+  </Viewbox>
 </Page>

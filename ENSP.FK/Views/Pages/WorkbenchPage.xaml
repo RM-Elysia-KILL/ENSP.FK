@@ -7,7 +7,7 @@
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
   xmlns:models="clr-namespace:ENSP.ZD.Models"
   xmlns:cfg="clr-namespace:ENSP.ZD.Models.Configuration"
-
+  xmlns:helpers="clr-namespace:ENSP.ZD.Helpers"
   xmlns:req="clr-namespace:ENSP.ZD.Models.Requirements"
   xmlns:vm="clr-namespace:ENSP.ZD.ViewModels.Pages"
   xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
@@ -22,7 +22,7 @@
 >
   <Page.Resources>
     <BooleanToVisibilityConverter x:Key="BoolToVis" />
-    <helpers:InverseBoolConverter x:Key="InverseBool" xmlns:helpers="clr-namespace:ENSP.ZD.Helpers" />
+    <helpers:InverseBoolConverter x:Key="InverseBool" />
     <Style x:Key="SectionBorder" TargetType="Border">
       <Setter Property="Padding" Value="12" />
       <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorSecondaryBrush}" />
@@ -36,7 +36,12 @@
     </Style>
   </Page.Resources>
 
-  <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+  <Viewbox Stretch="Uniform" StretchDirection="UpOnly">
+    <ScrollViewer
+      HorizontalScrollBarVisibility="Auto"
+      VerticalScrollBarVisibility="Auto"
+      Width="800"
+    >
     <StackPanel Margin="24">
 
       <!-- ═══ Page Header ═══ -->
@@ -92,7 +97,7 @@
                 Icon="Open24"
               />
               <Border
-                Width="1"
+                Width="{helpers:Scale 1}"
                 Margin="12,4,4,4"
                 Background="{DynamicResource CardStrokeFillColorDefaultBrush}"
               />
@@ -165,15 +170,15 @@
           <Grid>
             <Grid.ColumnDefinitions>
               <ColumnDefinition Width="*" MinWidth="200" />
-              <ColumnDefinition Width="12" />
-              <ColumnDefinition Width="380" MinWidth="280" />
+              <ColumnDefinition Width="{helpers:Scale 12}" />
+              <ColumnDefinition Width="*" MinWidth="280" MaxWidth="500" />
             </Grid.ColumnDefinitions>
 
             <!-- Left: free-text prompt -->
             <Grid Grid.Column="0">
               <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="300" />
+                <RowDefinition Height="{helpers:Scale 300}" />
               </Grid.RowDefinitions>
               <TextBlock
                 Grid.Row="0"
@@ -464,7 +469,7 @@
                 Icon="Delete24"
               />
               <Border
-                Width="1"
+                Width="{helpers:Scale 1}"
                 Margin="12,4,4,4"
                 Background="{DynamicResource CardStrokeFillColorDefaultBrush}"
               />
@@ -482,8 +487,8 @@
             <!-- Row 1: Device list + Config preview -->
             <Grid Grid.Row="1" Margin="0,8,0,0">
               <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="150" />
-                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" MinWidth="120" MaxWidth="220" />
+                <ColumnDefinition Width="3*" />
               </Grid.ColumnDefinitions>
 
               <ListBox
@@ -495,8 +500,8 @@
                   <DataTemplate DataType="{x:Type cfg:DeviceConfig}">
                     <StackPanel Margin="2,3" Orientation="Horizontal">
                       <ui:SymbolIcon
-                        Width="14"
-                        Height="14"
+                        Width="{helpers:Scale 14}"
+                        Height="{helpers:Scale 14}"
                         Margin="0,0,6,0"
                         Symbol="Server24"
                         Foreground="{DynamicResource TextFillColorSecondaryBrush}"
@@ -654,8 +659,8 @@
         <Border Style="{StaticResource SectionBorder}" Padding="0">
           <Grid>
             <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="280" MinWidth="220" />
-              <ColumnDefinition Width="*" MinWidth="350" />
+              <ColumnDefinition Width="*" MinWidth="200" MaxWidth="400" />
+              <ColumnDefinition Width="3*" MinWidth="350" />
             </Grid.ColumnDefinitions>
 
             <!-- Left: Device list -->
@@ -705,7 +710,7 @@
                           <!-- Icon -->
                           <ui:SymbolIcon
                             Grid.Row="0" Grid.Column="0"
-                            Width="18" Height="18"
+                            Width="{helpers:Scale 18}" Height="{helpers:Scale 18}"
                             Symbol="Globe24"
                             VerticalAlignment="Center"
                           />
@@ -723,7 +728,7 @@
                           <!-- Status indicators -->
                           <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
                             <!-- Busy indicator -->
-                            <Ellipse Width="8" Height="8" Margin="0,0,4,0" VerticalAlignment="Center"
+                            <Ellipse Width="{helpers:Scale 8}" Height="{helpers:Scale 8}" Margin="0,0,4,0" VerticalAlignment="Center"
                                      Visibility="{Binding IsBusy, Mode=OneWay, Converter={StaticResource BoolToVis}}">
                               <Ellipse.Style>
                                 <Style TargetType="Ellipse">
@@ -745,7 +750,7 @@
                               </Ellipse.Style>
                             </Ellipse>
                             <!-- Ready indicator -->
-                            <Ellipse Width="8" Height="8" Margin="0,0,4,0" Fill="#4CAF50" VerticalAlignment="Center">
+                            <Ellipse Width="{helpers:Scale 8}" Height="{helpers:Scale 8}" Margin="0,0,4,0" Fill="#4CAF50" VerticalAlignment="Center">
                               <Ellipse.Style>
                                 <Style TargetType="Ellipse">
                                   <Setter Property="Visibility" Value="Collapsed" />
@@ -759,7 +764,7 @@
                             </Ellipse>
                             <!-- Connected icon -->
                             <ui:SymbolIcon
-                              Width="12" Height="12"
+                              Width="{helpers:Scale 12}" Height="{helpers:Scale 12}"
                               Foreground="#4CAF50"
                               Symbol="CheckmarkCircle24"
                               VerticalAlignment="Center"
@@ -770,7 +775,7 @@
                           <!-- Progress bar -->
                           <ProgressBar
                             Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
-                            Height="4" Margin="0,5,0,2"
+                            Height="{helpers:Scale 4}" Margin="0,5,0,2"
                             Maximum="100" Minimum="0"
                             Visibility="{Binding IsBusy, Mode=OneWay, Converter={StaticResource BoolToVis}}"
                             Value="{Binding StartupProgress, Mode=OneWay}"
@@ -833,81 +838,89 @@
                   </Grid>
                 </Border>
 
-                <!-- Action buttons -->
-                <WrapPanel Grid.Row="1" Margin="10,6">
-                  <ui:Button
-                    Command="{Binding ViewModel.StartAllDevicesCommand}"
-                    Content="启动全部"
-                    Icon="Play24"
-                    Appearance="Success"
-                    ToolTip="通过 eNSP 窗口自动图像识别点击启动"
-                    IsEnabled="{Binding ViewModel.IsStartingDevices, Mode=OneWay, Converter={StaticResource InverseBool}}"
-                  />
-                  <ui:Button
-                    Margin="6,0,0,0"
-                    Command="{Binding ViewModel.StopAllDevicesCommand}"
-                    Content="停止全部"
-                    Icon="DismissCircle24"
-                  />
-                  <ui:Button
-                    Margin="6,0,0,0"
-                    Command="{Binding ViewModel.ConnectAllDevicesCommand}"
-                    Content="连接全部"
-                    Icon="PlugConnected24"
-                    Appearance="Primary"
-                    IsEnabled="{Binding ViewModel.IsConnecting, Mode=OneWay, Converter={StaticResource InverseBool}}"
-                  />
-                  <ui:Button
-                    Margin="6,0,0,0"
-                    Command="{Binding ViewModel.DisconnectAllDevicesCommand}"
-                    Content="断开全部"
-                    Icon="PlugDisconnected24"
-                  />
-                  <Border Margin="12,4" Width="1" Background="{DynamicResource CardStrokeFillColorDefaultBrush}" />
-                  <ui:Button
-                    Margin="6,0,0,0"
-                    Command="{Binding ViewModel.ConnectDeviceCommand}"
-                    CommandParameter="{Binding ViewModel.SelectedDevice}"
-                    Content="连接选中"
-                    Icon="Play24"
-                  />
-                  <ui:Button
-                    Margin="6,0,0,0"
-                    Command="{Binding ViewModel.DisconnectDeviceCommand}"
-                    Content="断开选中"
-                    Icon="DismissCircle24"
-                    IsEnabled="{Binding ViewModel.IsConnected, Mode=OneWay}"
-                  />
-                  <Border Margin="12,4" Width="1" Background="{DynamicResource CardStrokeFillColorDefaultBrush}" />
-                  <ui:Button
-                    Margin="6,0,0,0"
-                    Command="{Binding ViewModel.PushConfigToAllDevicesCommand}"
-                    Content="配置全部"
-                    Icon="Send24"
-                    Appearance="Success"
-                  />
-                  <ui:Button
-                    Margin="6,0,0,0"
-                    Command="{Binding ViewModel.PushConfigToSelectedDeviceCommand}"
-                    Content="配置选中"
-                    Icon="ArrowSync24"
-                    Appearance="Primary"
-                    IsEnabled="{Binding ViewModel.IsConnected, Mode=OneWay}"
-                  />
-                  <ui:Button
-                    Margin="6,0,0,0"
-                    Command="{Binding ViewModel.FetchDeviceConfigCommand}"
-                    Content="获取配置"
-                    Icon="CloudDownload24"
-                    IsEnabled="{Binding ViewModel.IsConnected, Mode=OneWay}"
-                  />
-                  <ui:Button
-                    Margin="6,0,0,0"
-                    Command="{Binding ViewModel.OpenDeviceConfigPopupCommand}"
-                    Content="编辑配置"
-                    Icon="Code24"
-                  />
-                </WrapPanel>
+                <!-- Action buttons — grouped -->
+                <StackPanel Grid.Row="1" Margin="10,4">
+                  <!-- Group 1: Device Control -->
+                  <Border Style="{StaticResource SectionBorder}" Padding="10,6" Margin="0,0,0,4">
+                    <Expander Header="设备管控" IsExpanded="True" FontWeight="Medium" FontSize="12">
+                      <WrapPanel Margin="0,6,0,0">
+                        <ui:Button
+                          Command="{Binding ViewModel.StartAllDevicesCommand}"
+                          Content="启动全部"
+                          Icon="Play24"
+                          Appearance="Success"
+                          ToolTip="通过 eNSP 窗口自动图像识别点击启动"
+                          IsEnabled="{Binding ViewModel.IsStartingDevices, Mode=OneWay, Converter={StaticResource InverseBool}}"
+                        />
+                        <ui:Button
+                          Margin="6,0,0,0"
+                          Command="{Binding ViewModel.ConnectAllDevicesCommand}"
+                          Content="连接全部"
+                          Icon="PlugConnected24"
+                          Appearance="Primary"
+                          IsEnabled="{Binding ViewModel.IsConnecting, Mode=OneWay, Converter={StaticResource InverseBool}}"
+                        />
+                        <ui:Button
+                          Margin="6,0,0,0"
+                          Command="{Binding ViewModel.DisconnectAllDevicesCommand}"
+                          Content="断开全部"
+                          Icon="PlugDisconnected24"
+                        />
+                        <Border Margin="12,4" Width="{helpers:Scale 1}" Background="{DynamicResource CardStrokeFillColorDefaultBrush}" />
+                        <ui:Button
+                          Margin="6,0,0,0"
+                          Command="{Binding ViewModel.ConnectDeviceCommand}"
+                          CommandParameter="{Binding ViewModel.SelectedDevice}"
+                          Content="连接选中"
+                          Icon="Play24"
+                        />
+                        <ui:Button
+                          Margin="6,0,0,0"
+                          Command="{Binding ViewModel.DisconnectDeviceCommand}"
+                          Content="断开选中"
+                          Icon="DismissCircle24"
+                          IsEnabled="{Binding ViewModel.IsConnected, Mode=OneWay}"
+                        />
+                      </WrapPanel>
+                    </Expander>
+                  </Border>
+
+                  <!-- Group 2: Config Operations -->
+                  <Border Style="{StaticResource SectionBorder}" Padding="10,6">
+                    <Expander Header="配置操作" IsExpanded="True" FontWeight="Medium" FontSize="12">
+                      <WrapPanel Margin="0,6,0,0">
+                        <ui:Button
+                          Command="{Binding ViewModel.PushConfigToAllDevicesCommand}"
+                          Content="配置全部"
+                          Icon="Send24"
+                          Appearance="Success"
+                        />
+                        <ui:Button
+                          Margin="6,0,0,0"
+                          Command="{Binding ViewModel.PushConfigToSelectedDeviceCommand}"
+                          Content="配置选中"
+                          Icon="ArrowSync24"
+                          Appearance="Primary"
+                          IsEnabled="{Binding ViewModel.IsConnected, Mode=OneWay}"
+                        />
+                        <Border Margin="12,4" Width="{helpers:Scale 1}" Background="{DynamicResource CardStrokeFillColorDefaultBrush}" />
+                        <ui:Button
+                          Margin="6,0,0,0"
+                          Command="{Binding ViewModel.FetchDeviceConfigCommand}"
+                          Content="获取配置"
+                          Icon="CloudDownload24"
+                          IsEnabled="{Binding ViewModel.IsConnected, Mode=OneWay}"
+                        />
+                        <ui:Button
+                          Margin="6,0,0,0"
+                          Command="{Binding ViewModel.OpenDeviceConfigPopupCommand}"
+                          Content="编辑配置"
+                          Icon="Code24"
+                        />
+                      </WrapPanel>
+                    </Expander>
+                  </Border>
+                </StackPanel>
 
                 <!-- Terminal -->
                 <Border
@@ -1061,5 +1074,6 @@
       </Expander>
 
     </StackPanel>
-  </ScrollViewer>
+    </ScrollViewer>
+  </Viewbox>
 </Page>

@@ -506,11 +506,15 @@ public partial class DeviceConnectionManager : IDisposable
         }
         catch (OperationCanceledException)
         {
+            session.State = DeviceConnectionState.Timeout;
+            session.ErrorMessage = "操作已取消";
             stream.Dispose();
             client.Dispose();
         }
         catch
         {
+            session.State = DeviceConnectionState.Failed;
+            session.ErrorMessage = "内部错误";
             stream.Dispose();
             client.Dispose();
             throw;

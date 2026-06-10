@@ -1,5 +1,7 @@
-﻿using ENSP.ZD.ViewModels.Windows;
+﻿using ENSP.ZD.Services;
+using ENSP.ZD.ViewModels.Windows;
 using System.Diagnostics;
+using System.Windows;
 using Wpf.Ui;
 using Wpf.Ui.Abstractions;
 using Wpf.Ui.Appearance;
@@ -29,6 +31,15 @@ namespace ENSP.ZD.Views.Windows
             sw.Stop();
             Debug.WriteLine($"[STARTUP] MainWindow.InitializeComponent: {sw.ElapsedMilliseconds}ms");
 
+            // Recalculate UI scale when window resizes
+            SizeChanged += (_, _) =>
+            {
+                UiScaleService.Instance.Recalculate(visual: this);
+            };
+
+            // Size window relative to screen working area
+            ApplyScreenRelativeSize(0.65, 0.75);
+
             sw.Restart();
             SetPageService(navigationViewPageProvider);
             navigationService.SetNavigationControl(RootNavigation);
@@ -37,6 +48,13 @@ namespace ENSP.ZD.Views.Windows
 
             swTotal.Stop();
             Debug.WriteLine($"[STARTUP] MainWindow.ctor total: {swTotal.ElapsedMilliseconds}ms");
+        }
+
+        private void ApplyScreenRelativeSize(double widthRatio, double heightRatio)
+        {
+            var wa = SystemParameters.WorkArea;
+            Width = Math.Max(MinWidth, wa.Width * widthRatio);
+            Height = Math.Max(MinHeight, wa.Height * heightRatio);
         }
 
         #region INavigationWindow methods

@@ -5,6 +5,7 @@
   xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
   xmlns:local="clr-namespace:ENSP.ZD.Views.Pages"
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+		xmlns:helpers="clr-namespace:ENSP.ZD.Helpers"
   xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
   Title="首页"
   d:DataContext="{d:DesignInstance local:DashboardPage,
@@ -16,7 +17,8 @@
   Foreground="{DynamicResource TextFillColorPrimaryBrush}"
   mc:Ignorable="d"
 >
-  <Grid>
+  <Viewbox Stretch="Uniform" StretchDirection="UpOnly">
+    <Grid Width="800">
     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
       <TextBlock
         HorizontalAlignment="Center"
@@ -39,5 +41,6 @@
         Text="其余模块（数据、诊断、设置 等）均为开发测试用途"
       />
     </StackPanel>
-  </Grid>
+    </Grid>
+  </Viewbox>
 </Page>
